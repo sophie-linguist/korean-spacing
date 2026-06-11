@@ -14,7 +14,7 @@
 
 ## 바로 써 보기
 
-**[korean-spacing-v0.2.1.zip 다운로드](https://github.com/sophie-linguist/korean-spacing/releases/download/v0.2.1/korean-spacing-v0.2.1.zip)**
+**[korean-spacing-v0.2.2.zip 다운로드](https://github.com/sophie-linguist/korean-spacing/releases/download/v0.2.2/korean-spacing-v0.2.2.zip)**
 
 1. 위 링크에서 zip 파일을 내려받습니다.
 2. 압축을 풀고 **korean-spacing.exe**를 더블클릭합니다.
