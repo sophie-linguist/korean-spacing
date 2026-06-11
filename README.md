@@ -6,7 +6,7 @@
 
 ## 바로 사용하기
 
-**[korean-spacing-v0.1.0.zip 다운로드](https://github.com/sophie-linguist/korean-spacing/releases/download/v0.1.0/korean-spacing-v0.1.0.zip)**
+**[korean-spacing-v0.2.0.zip 다운로드](https://github.com/sophie-linguist/korean-spacing/releases/download/v0.2.0/korean-spacing-v0.2.0.zip)**
 
 1. 위 링크에서 zip을 다운로드합니다.
 2. 압축을 풀고 **korean-spacing.exe**를 더블클릭합니다.
