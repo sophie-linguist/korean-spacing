@@ -4,6 +4,7 @@ from typing import Any
 
 from core.caret_rule import caret_hint
 from core.compound import detect_compound
+from core.connective import detect_connective
 from core.homograph import detect_homograph
 from core.honorific import detect_honorific
 from core.local_index import lookup
@@ -145,6 +146,13 @@ def _combined_result(normalized: str, db_path: str | None) -> InspectResult | No
 
 def inspect(text: str, db_path: str | None = None) -> InspectResult:
     normalized = normalize_query(text)
+
+    # 제45항 연결·열거어(및·겸·대·내지·등)는 여러 어절을 묶으므로, 단어 조회 전에
+    # 먼저 처리해 합성어로 잘못 붙이지 않게 한다('이사장 및 이사' → '이사장및이사' 방지).
+    connective_case = detect_connective(normalized)
+    if connective_case is not None:
+        return connective_case
+
     segmentation = segment(normalized)
 
     entries = lookup(normalized, db_path=db_path)
