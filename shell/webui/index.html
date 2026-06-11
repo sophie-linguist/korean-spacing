@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>한국어 띄어쓰기는 어려워</title>
+<style>
+  :root {
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --ink: #1b1f27;
+    --muted: #6b7280;
+    --line: #e6e9f0;
+    --space: #15803d;      /* 띄어 씀 (초록) */
+    --space-bg: #e9f7ee;
+    --join: #1d4ed8;       /* 붙여 씀 (파랑) */
+    --join-bg: #e8efff;
+    --rule: #7c3aed;       /* 조항 (보라) */
+    --rule-bg: #f1eafe;
+    --amber: #b45309;
+    --amber-bg: #fdf2e3;
+    --shadow: 0 1px 2px rgba(16,24,40,.06), 0 8px 24px rgba(16,24,40,.06);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: radial-gradient(1200px 600px at 80% -10%, #eef2ff 0%, var(--bg) 45%);
+    color: var(--ink);
+    font-family: 'Pretendard', -apple-system, 'Malgun Gothic', 'Segoe UI', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 28px 22px 56px; }
+
+  header h1 { font-size: 22px; font-weight: 800; letter-spacing: -.02em; margin: 0; }
+  header p { margin: 8px 0 0; color: var(--muted); font-size: 14px; line-height: 1.7; }
+  header p .lead { color: var(--ink); font-weight: 600; }
+
+  /* 검색바 */
+  .search { display: flex; gap: 10px; margin: 20px 0 12px; }
+  .search input {
+    flex: 1; font-size: 20px; font-weight: 600; padding: 14px 18px;
+    border: 1px solid var(--line); border-radius: 14px; background: var(--card);
+    box-shadow: var(--shadow); outline: none; transition: border-color .15s, box-shadow .15s;
+  }
+  .search input:focus { border-color: #c3cef6; box-shadow: 0 0 0 4px #e7ecfe; }
+  .search button {
+    border: 0; border-radius: 14px; padding: 0 22px; font-size: 16px; font-weight: 700;
+    color: #fff; cursor: pointer; background: linear-gradient(135deg,#4f7cff,#3b5bdb);
+    box-shadow: var(--shadow); transition: transform .08s, filter .15s;
+  }
+  .search button:hover { filter: brightness(1.05); }
+  .search button:active { transform: translateY(1px); }
+  .search button[disabled] { opacity: .5; cursor: default; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+  .chips span.lbl { color: var(--muted); font-size: 13px; align-self: center; margin-right: 2px; }
+  .chip {
+    border: 1px solid var(--line); background: var(--card); color: #374151;
+    border-radius: 999px; padding: 6px 14px; font-size: 13.5px; cursor: pointer;
+    transition: background .12s, border-color .12s, transform .08s;
+  }
+  .chip:hover { background: #f0f3ff; border-color: #c8d4f7; }
+  .chip:active { transform: translateY(1px); }
+
+  .status { color: var(--muted); font-size: 13px; min-height: 18px; margin: 10px 2px; }
+
+  /* 섹션 */
+  section { margin-top: 22px; animation: fade .25s ease both; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px);} to { opacity:1; transform:none; } }
+  .sec-title { font-size: 13px; font-weight: 800; color: var(--muted); letter-spacing: .02em;
+    text-transform: none; margin: 0 0 10px 2px; }
+
+  /* 표기 옵션 카드 */
+  .options { display: flex; flex-wrap: wrap; gap: 12px; }
+  .opt {
+    flex: 1 1 220px; background: var(--card); border: 1px solid var(--line);
+    border-radius: 16px; padding: 16px 18px; box-shadow: var(--shadow);
+    transition: transform .1s, box-shadow .15s; position: relative; overflow: hidden;
+  }
+  .opt:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(16,24,40,.10), 0 14px 30px rgba(16,24,40,.08); }
+  .opt::before { content:""; position:absolute; left:0; top:0; bottom:0; width:4px; }
+  .opt.space::before { background: var(--space); }
+  .opt.join::before { background: var(--join); }
+  .pill { display:inline-block; font-size:12px; font-weight:800; padding:3px 10px; border-radius:999px; }
+  .pill.space { color: var(--space); background: var(--space-bg); }
+  .pill.join { color: var(--join); background: var(--join-bg); }
+  .opt .val { font-size: 26px; font-weight: 800; letter-spacing: -.01em; margin-top: 10px; }
+
+  /* 조항 카드 */
+  .rules { display: grid; gap: 10px; }
+  .rule {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 13px 16px; box-shadow: var(--shadow); display: flex; gap: 12px; align-items: flex-start;
+  }
+  .rule .clause { font-weight: 800; color: var(--rule); background: var(--rule-bg);
+    border-radius: 8px; padding: 4px 10px; font-size: 13px; white-space: nowrap; }
+  .rule .body { flex: 1; }
+  .rule .policy { font-size: 12px; font-weight: 800; }
+  .rule .policy.space { color: var(--space); }
+  .rule .policy.join { color: var(--join); }
+  .rule .policy.both { color: var(--amber); }
+  .rule .gist { color: #374151; font-size: 14px; margin-top: 3px; line-height: 1.5; font-weight: 600; }
+  .rule .detail { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
+  .rule .detail + .detail { margin-top: 8px; }
+  .rule .law { font-size: 13.5px; color: #1f2937; line-height: 1.6; }
+  .rule .law .tag { font-weight: 800; color: var(--rule); margin-right: 4px; }
+  .rule .ex { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .rule .ex .e { font-size: 12px; color: #475569; background: #f3f4f6; border-radius: 6px; padding: 2px 9px; }
+  .rule .comment { margin-top: 8px; font-size: 13px; color: #5b6470; line-height: 1.7;
+    background: #f8fafc; border-left: 3px solid #d7deea; border-radius: 0 8px 8px 0; padding: 9px 12px; }
+  .rule .comment .clabel { font-weight: 800; color: #64748b; font-size: 11.5px; display:block; margin-bottom: 2px; }
+
+  /* 분리 */
+  .seg { background: #fff7ed; border: 1px solid #fde6c8; border-radius: 14px; padding: 12px 16px; }
+  .seg .h { font-weight: 800; color: var(--amber); font-size: 14px; }
+  .seg .row { font-size: 15px; margin-top: 6px; }
+  .seg .row b { color: #9a3412; }
+
+  /* 도움말 */
+  .notes { background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 12px 16px; box-shadow: var(--shadow); }
+  .notes li { color: #4b5563; font-size: 13.5px; line-height: 1.65; list-style: none; padding-left: 16px; position: relative; }
+  .notes li::before { content: "•"; color: #9aa3b2; position: absolute; left: 2px; }
+
+  /* 사전 */
+  .dict { display: grid; gap: 8px; }
+  .entry { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 11px 14px; box-shadow: var(--shadow); }
+  .entry .top { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .entry .w { font-weight: 800; font-size: 15px; }
+  .entry .pos { font-size: 12px; color: var(--muted); background: #f3f4f6; border-radius: 6px; padding: 2px 8px; }
+  .entry .badge { font-size: 11.5px; color: #475569; }
+  .entry .def { color: #4b5563; font-size: 13px; margin-top: 4px; line-height: 1.5; }
+
+  /* 안내 / 빈 결과 */
+  .empty { background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+    padding: 26px; box-shadow: var(--shadow); text-align: left; }
+  .empty h2 { margin: 0 0 6px; font-size: 18px; }
+  .empty p { color: var(--muted); margin: 0 0 14px; }
+  .empty .tip { color: #475569; font-size: 14px; line-height: 1.7; }
+  .empty .tip b { color: var(--ink); }
+
+  .hint-line { color: var(--muted); font-size: 12.5px; margin-top: 16px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>한국어 띄어쓰기는 어려워</h1>
+    <p>
+      <span class="lead">띄어 써야 할지 붙여 써야 할지 궁금하신가요?</span><br>
+      검색 창에 궁금한 표현을 넣어 보세요.<br>
+      한글맞춤법과 국어사전(우리말샘)을 살펴 보고 답변해 드립니다.
+    </p>
+  </header>
+
+  <div class="search">
+    <input id="q" type="text" placeholder="궁금한 표현을 입력하세요" autocomplete="off" maxlength="20" />
+    <button id="go" disabled>조회</button>
+  </div>
+  <div class="status" id="status">사전을 준비하는 중…</div>
+
+  <div id="result"></div>
+</div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => (s == null ? "" : String(s).replace(/[&<>"']/g, c =>
+    ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c])));
+  const isSpaced = (o) => o.trim().includes(" ");
+  const policyClass = (p) => p.includes("띄") ? "space" : (p.includes("붙") ? "join" : "both");
+
+  let ready = false;
+
+  function setStatus(t) { $("status").textContent = t; }
+
+  async function run() {
+    if (!ready) return;
+    const q = $("q").value.trim();
+    if (!q) { setStatus("검색어를 입력하세요."); return; }
+    setStatus("조회 중…");
+    let data;
+    try { data = await window.pywebview.api.inspect(q); }
+    catch (e) { setStatus("오류가 발생했습니다."); return; }
+    render(data);
+  }
+
+  function render(data) {
+    const out = $("result");
+    if (data.error) {
+      const msg = {
+        empty: "검색어를 입력하세요.",
+        too_long: `입력은 ${data.max}자 이하로 해주세요.`,
+        dict_not_found: "사전 파일(dict.db)을 찾을 수 없어요 — 실행 파일과 같은 폴더에 두세요.",
+        index_error: "사전 인덱스에 문제가 있어요 — 다시 빌드해 주세요.",
+      }[data.error] || "문제가 발생했어요.";
+      setStatus(msg); out.innerHTML = ""; return;
+    }
+
+    if (!data.found) {
+      setStatus(`‘${data.input}’ — 딱 맞는 결과가 없어요.`);
+      out.innerHTML = `
+        <section><div class="empty">
+          <h2>딱 맞는 결과가 없어요</h2>
+          <p>‘${esc(data.input)}’ — 사전에 없고, 규칙으로도 분명히 가르기 어려웠어요.</p>
+          <div class="tip">
+            <b>이렇게 다시 검색해 보세요</b><br>
+            • 동사·형용사는 기본형으로 — ‘먹었어요’ → ‘먹다’<br>
+            • 띄어쓰기가 궁금하면 붙여서 — ‘아는데’, ‘차한대’, ‘회의중’<br>
+            • 긴 문장보다 짧은 표현 하나로
+          </div>
+        </div></section>`;
+      return;
+    }
+
+    setStatus(`‘${data.input}’ 조회 완료`);
+    let html = "";
+
+    if (data.spacing_options && data.spacing_options.length) {
+      html += `<section><div class="sec-title">이렇게 쓸 수 있어요</div><div class="options">`;
+      data.spacing_options.forEach(o => {
+        const sp = isSpaced(o);
+        html += `<div class="opt ${sp ? "space" : "join"}">
+          <span class="pill ${sp ? "space" : "join"}">${sp ? "띄어 씀" : "붙여 씀"}</span>
+          <div class="val">${esc(o)}</div></div>`;
+      });
+      html += `</div></section>`;
+    }
+
+    if (data.rule_hints && data.rule_hints.length) {
+      html += `<section><div class="sec-title">조항 근거</div><div class="rules">`;
+      data.rule_hints.forEach(h => {
+        const pc = policyClass(h.policy);
+        let det = "";
+        (h.details || []).forEach(dt => {
+          const ex = (dt.examples || []).map(e => `<span class="e">${esc(e)}</span>`).join("");
+          det += `<div class="detail">
+            <div class="law"><span class="tag">${esc(dt.num)}</span>${esc(dt.text)}</div>
+            ${ex ? `<div class="ex">${ex}</div>` : ""}
+            ${dt.commentary ? `<div class="comment"><span class="clabel">해설</span>${esc(dt.commentary)}</div>` : ""}
+          </div>`;
+        });
+        html += `<div class="rule">
+          <span class="clause">${esc(h.clause)}</span>
+          <div class="body">
+            <span class="policy ${pc}">${esc(h.policy)}</span>
+            <div class="gist">${esc(h.gist)}</div>
+            ${det}
+          </div></div>`;
+      });
+      html += `</div></section>`;
+    }
+
+    if (data.segmentation && data.segmentation.candidates && data.segmentation.candidates.length) {
+      html += `<section><div class="seg"><div class="h">✂ ${esc(data.segmentation.message)}</div>`;
+      data.segmentation.candidates.forEach(c => {
+        html += `<div class="row">${esc(c.original)} → <b>${esc(c.left)}</b> + <b>${esc(c.right)}</b></div>`;
+      });
+      html += `</div></section>`;
+    }
+
+    if (data.notes && data.notes.length) {
+      html += `<section><div class="sec-title">도움말</div><ul class="notes">`;
+      data.notes.forEach(n => { html += `<li>${esc(n)}</li>`; });
+      html += `</ul></section>`;
+    }
+
+    if (data.entries && data.entries.length) {
+      html += `<section><div class="sec-title">사전 뜻풀이</div><div class="dict">`;
+      data.entries.forEach(e => {
+        const badge = e.badge ? `<span class="badge">· ${esc(e.badge)}</span>` : "";
+        const def = e.definition ? `<div class="def">${esc(e.definition)}</div>` : "";
+        html += `<div class="entry"><div class="top">
+          <span class="w">${esc(e.word)}</span>
+          <span class="pos">${esc(e.pos)}</span>${badge}</div>${def}</div>`;
+      });
+      html += `</div></section>`;
+    }
+
+    out.innerHTML = html;
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    $("go").onclick = run;
+    $("q").addEventListener("keydown", (e) => { if (e.key === "Enter") run(); });
+  });
+
+  window.addEventListener("pywebviewready", () => {
+    ready = true;
+    $("go").disabled = false;
+    setStatus("단어 또는 짧은 표현을 입력하세요.");
+    $("q").focus();
+  });
+</script>
+</body>
+</html>

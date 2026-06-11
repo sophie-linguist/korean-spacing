@@ -1,0 +1,46 @@
+﻿# Python artifacts
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+
+# Local/agent configs
+.claude/
+.omo/
+
+# Build artifacts (build/ also holds source scripts, so ignore only outputs)
+dist/
+build/pyi-build/
+build/*.db
+*.spec
+*.exe
+
+# Local dictionary/index data
+*.db
+dict.db
+전체 내려받기_우리말샘_json_20260603/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Sensitive data directories
+data/
+upload/
+uploads/
+backup/
+result/
+results/
+
+# Sensitive document/data formats
+*.csv
+*.xlsx
+*.xls
+*.pdf
+*.hwp
+*.hwpx
+*.docx
+
+# OMO evidence artifacts
+.omo/evidence/
