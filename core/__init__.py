@@ -8,6 +8,7 @@ from core.homograph import detect_homograph
 from core.honorific import detect_honorific
 from core.local_index import lookup
 from core.normalize import normalize_query
+from core.numeral import detect_numeral
 from core.particle import detect_particle_chain
 from core.pos_mapper import map_entry
 from core.presenter import present
@@ -150,6 +151,14 @@ def inspect(text: str, db_path: str | None = None) -> InspectResult:
     result = present(entries, normalized)
 
     if not entries:
+        # 수 + 단위(제43항) / 큰 수 만 단위(제44항)를 가장 먼저 본다.
+        # '열두'를 한 단어로 인식(열두 마리)하고, '12억3456만'의 '만'을
+        # 의존명사/조사로 오인하지 않도록 동형이의 분기보다 앞에 둔다.
+        numeral_case = detect_numeral(normalized, db_path=db_path)
+        if numeral_case is not None:
+            numeral_case.segmentation = segmentation
+            return numeral_case
+
         counter_case = _counter_phrase_result(normalized, segmentation)
         if counter_case is not None:
             return counter_case
@@ -192,6 +201,19 @@ def inspect(text: str, db_path: str | None = None) -> InspectResult:
         for opt in combined_extra.spacing_options:
             if opt not in spacing_options:
                 spacing_options.append(opt)
+
+    # 수 병행 안내: '두마리(두마-리)·세개'처럼 우연히 사전에 있는 수+단위 표현이
+    # 사전 풀이에 가려 띄어쓰기 안내가 비는 것을 막는다(제43·44항을 참고로 덧붙임).
+    numeral_extra = detect_numeral(normalized, db_path, strong_only=True)
+    if numeral_extra is not None:
+        for rh in numeral_extra.rule_hints:
+            if not any(h.항번호 == rh.항번호 for h in rule_hints):
+                rule_hints.append(rh)
+        for opt in numeral_extra.spacing_options:
+            if opt not in spacing_options:
+                spacing_options.append(opt)
+        if numeral_extra.notes:
+            result.notes = [*result.notes, f"수로 본다면 — {numeral_extra.notes[0]}"]
 
     result.rule_hints = rule_hints
     result.spacing_options = spacing_options
