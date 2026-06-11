@@ -146,7 +146,11 @@ def detect_homograph(text: str, db_path: str | None = None) -> InspectResult | N
 
     spaced = f"{prefix} {key}"
     rule_hints = [
-        RuleHint(항번호=r.clause, 원칙허용=r.spacing, 요지=f"[{r.pos}] {r.gloss} (예: {r.example})")
+        RuleHint(
+            항번호=r.clause,
+            원칙허용=r.spacing,
+            요지=f"{r.pos}인 경우 {'띄어' if r.spacing == '띄움' else '붙여'} 씁니다 — {r.gloss} (예: {r.example})",
+        )
         for r in readings
     ]
     notes = [
