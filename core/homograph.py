@@ -97,6 +97,13 @@ HOMOGRAPHS: dict[str, tuple[str, list[Reading]]] = {
 }
 
 
+# 동형이의 키가 분리 불가능한 복합 어미의 일부일 때 차단한다.
+# 예: "든지"(-든지: 하든지 말든지, 얼마든지)는 단일 어미이므로 "든"+"지"로 가르면 안 된다.
+_ENDING_BLOCKS: dict[str, tuple[str, ...]] = {
+    "지": ("든", "던"),
+}
+
+
 def _match(joined: str) -> str | None:
     """입력 끝에서 가장 긴 동형이의 글자를 찾는다(앞말이 있어야 함)."""
     best: str | None = None
@@ -104,6 +111,11 @@ def _match(joined: str) -> str | None:
         if joined.endswith(key) and len(joined) > len(key):
             if best is None or len(key) > len(best):
                 best = key
+    if best is not None:
+        prefix = joined[: -len(best)]
+        blockers = _ENDING_BLOCKS.get(best, ())
+        if any(prefix.endswith(b) for b in blockers):
+            return None
     return best
 
 
