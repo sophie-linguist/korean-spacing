@@ -9,18 +9,29 @@ def _clauses(r):
     return {h.항번호 for h in r.rule_hints}
 
 
-def test_particle_vs_dependent_noun_both_shown():
-    # 대로: 의존명사(제42) + 조사(제41) 두 해석을 함께 제시
+def test_particle_resolves_to_attach_when_prefix_nominal():
+    # 법대로: '법'은 체언 전용 → 조사(제41) '붙임'으로 확정, 정답 하나만 제시
     r = inspect("법대로")
     assert r.found
+    assert _clauses(r) == {"제41항"}
+    assert r.spacing_options == ["법대로"]
+    assert any("체언" in n and "붙여" in n for n in r.notes)
+
+
+def test_particle_resolves_to_space_when_prefix_predicate():
+    # 아는만큼: '아는'은 용언 활용형 전용 → 의존명사(제42) '띄움'으로 확정
+    r = inspect("아는만큼")
+    assert r.found
+    assert _clauses(r) == {"제42항"}
+    assert r.spacing_options == ["아는 만큼"]
+    assert any("용언" in n and "띄어" in n for n in r.notes)
+
+
+def test_particle_keeps_both_when_prefix_ambiguous():
+    # 본대로: '본'은 체언이면서 용언 활용형(보다)도 가능 → 두 해석 모두 제시
+    r = inspect("본대로")
     assert _clauses(r) == {"제42항", "제41항"}
-    assert r.spacing_options == ["법 대로", "법대로"]
-
-
-def test_particle_prefix_hint_uses_gate():
-    # 앞말이 체언이면 조사(붙임), 용언 활용형이면 의존명사(띄움)으로 힌트
-    assert any("체언" in n and "붙여" in n for n in inspect("법대로").notes)
-    assert any("용언" in n and "띄어" in n for n in inspect("본대로").notes)
+    assert r.spacing_options == ["본 대로", "본대로"]
 
 
 def test_ending_type_meaning_hint():

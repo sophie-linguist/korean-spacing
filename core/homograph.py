@@ -119,8 +119,33 @@ def _match(joined: str) -> str | None:
     return best
 
 
-def _prefix_hint(kind: str, prefix: str, spaced: str, joined: str, db_path: str | None) -> str:
-    """앞말 성격으로 어느 해석이 맞는지 힌트(가능할 때만)."""
+def _resolve_particle(prefix: str, db_path: str | None) -> str | None:
+    """PARTICLE 유형에서 앞말 품사로 띄움/붙임을 확정한다.
+
+    앞말이 용언 활용형 '전용'이면 의존 명사 → '띄움', 체언 '전용'이면 조사 → '붙임'.
+    둘 다 가능하거나(예: ‘본’) 어느 쪽도 확인되지 않으면(미등재) None → 모호로 둔다.
+    """
+    pred = is_predicate_inflection(prefix, db_path=db_path)
+    nominal = exists_with_pos(prefix, "%명사%", db_path) or exists_with_pos(
+        prefix, "%대명사%", db_path
+    )
+    if pred and not nominal:
+        return "띄움"
+    if nominal and not pred:
+        return "붙임"
+    return None
+
+
+def _rule_hint(r: Reading) -> RuleHint:
+    return RuleHint(
+        항번호=r.clause,
+        원칙허용=r.spacing,
+        요지=f"{r.pos}인 경우 {'띄어' if r.spacing == '띄움' else '붙여'} 씁니다 — {r.gloss} (예: {r.example})",
+    )
+
+
+def _ambiguous_hint(kind: str, prefix: str, spaced: str, joined: str, db_path: str | None) -> str:
+    """확정 불가일 때 어느 해석이 맞는지 방향 힌트."""
     if kind == PARTICLE:
         if is_predicate_inflection(prefix, db_path=db_path):
             return f"여기서는 앞말 ‘{prefix}’이(가) 용언 활용형이라 의존 명사 → 띄어 씁니다: ‘{spaced}’."
@@ -133,7 +158,11 @@ def _prefix_hint(kind: str, prefix: str, spaced: str, joined: str, db_path: str 
 
 
 def detect_homograph(text: str, db_path: str | None = None) -> InspectResult | None:
-    """입력이 동형이의 글자로 끝나면 두 해석(띄움/붙임) 대비 카드를 만든다."""
+    """입력이 동형이의 글자로 끝나면 띄움/붙임 안내를 만든다.
+
+    앞말 품사로 한 해석이 확정되면(PARTICLE 유형) 정답 하나로 좁혀 안내하고,
+    반대 해석은 조건부 '참고'로만 덧붙인다. 확정할 수 없으면 두 해석을 나란히 보인다.
+    """
     joined = "".join(text.strip().split())
     key = _match(joined)
     if key is None:
@@ -145,17 +174,36 @@ def detect_homograph(text: str, db_path: str | None = None) -> InspectResult | N
         return None
 
     spaced = f"{prefix} {key}"
-    rule_hints = [
-        RuleHint(
-            항번호=r.clause,
-            원칙허용=r.spacing,
-            요지=f"{r.pos}인 경우 {'띄어' if r.spacing == '띄움' else '붙여'} 씁니다 — {r.gloss} (예: {r.example})",
+
+    resolved = _resolve_particle(prefix, db_path) if kind == PARTICLE else None
+    if resolved is not None:
+        main = next(r for r in readings if r.spacing == resolved)
+        other = next(r for r in readings if r.spacing != resolved)
+        answer = spaced if resolved == "띄움" else joined
+        if resolved == "띄움":
+            decided = (
+                f"앞말 ‘{prefix}’은(는) 용언 활용형이므로 ‘{key}’은(는) 의존 명사입니다 "
+                f"→ 띄어 씁니다: ‘{answer}’."
+            )
+            ref = f"참고로 ‘{other.example}’처럼 체언 뒤에서는 ‘{key}’이(가) 조사가 되어 붙여 씁니다(제41항)."
+        else:
+            decided = (
+                f"앞말 ‘{prefix}’은(는) 체언이므로 ‘{key}’은(는) 조사입니다 "
+                f"→ 붙여 씁니다: ‘{answer}’."
+            )
+            ref = f"참고로 ‘{other.example}’처럼 용언 활용형 뒤에서는 ‘{key}’이(가) 의존 명사가 되어 띄어 씁니다(제42항)."
+        return InspectResult(
+            input=text,
+            found=True,
+            rule_hints=[_rule_hint(main)],
+            spacing_options=[answer],
+            notes=[decided, ref],
         )
-        for r in readings
-    ]
+
+    rule_hints = [_rule_hint(r) for r in readings]
     notes = [
         "같은 글자라도 품사에 따라 띄어쓰기가 갈립니다 — 맥락을 보고 고르세요.",
-        _prefix_hint(kind, prefix, spaced, joined, db_path),
+        _ambiguous_hint(kind, prefix, spaced, joined, db_path),
     ]
     return InspectResult(
         input=text,
