@@ -5,8 +5,10 @@ from typing import Any
 from core.caret_rule import caret_hint
 from core.compound import detect_compound
 from core.homograph import detect_homograph
+from core.honorific import detect_honorific
 from core.local_index import lookup
 from core.normalize import normalize_query
+from core.particle import detect_particle_chain
 from core.pos_mapper import map_entry
 from core.presenter import present
 from core.schema import InspectResult, RuleHint
@@ -83,9 +85,9 @@ def _counter_joined_result(normalized: str, segmentation) -> InspectResult | Non
         return None
 
     cand = segmentation.candidates[0]
-    joined = "".join(normalized.split())
     prefix = cand.original[: -(len(cand.left) + len(cand.right))]
     spaced = " ".join(filter(None, [prefix, cand.left, cand.right]))
+    half_joined = " ".join(filter(None, [prefix, cand.left + cand.right]))
 
     rule = RuleHint(
         항번호="제43항",
@@ -96,7 +98,7 @@ def _counter_joined_result(normalized: str, segmentation) -> InspectResult | Non
         input=normalized,
         found=True,
         rule_hints=[rule],
-        spacing_options=list(dict.fromkeys([spaced, joined])),
+        spacing_options=list(dict.fromkeys([spaced, half_joined])),
         segmentation=segmentation,
         notes=["수 관형사 + 단위 명사 구조로 판단되어 제43항을 안내합니다."],
     )
@@ -164,15 +166,33 @@ def inspect(text: str, db_path: str | None = None) -> InspectResult:
         if combined_case is not None:
             return combined_case
 
+        honorific_case = detect_honorific(normalized, db_path=db_path)
+        if honorific_case is not None:
+            return honorific_case
+
         compound_case = detect_compound(normalized, db_path=db_path)
         if compound_case is not None:
             return compound_case
 
+        particle_case = detect_particle_chain(normalized, db_path=db_path)
+        if particle_case is not None:
+            return particle_case
         result.hint = "‘-다’로 끝나는 기본형(먹다·예쁘다)이나 ‘아는데·차한대’처럼 붙여 쓴 표현으로 검색해 보세요."
         result.segmentation = segmentation
         return result
 
     rule_hints, spacing_options = _collect_rule_hints(entries)
+
+    # 보조용언 병행 안내: 사전에 등재된 단어라도 보조용언 꼬리가 매칭되면 제47항 병행
+    combined_extra = _combined_result(normalized, db_path)
+    if combined_extra is not None:
+        for rh in combined_extra.rule_hints:
+            if rh.항번호 == "제47항" and not any(h.항번호 == "제47항" for h in rule_hints):
+                rule_hints.append(rh)
+        for opt in combined_extra.spacing_options:
+            if opt not in spacing_options:
+                spacing_options.append(opt)
+
     result.rule_hints = rule_hints
     result.spacing_options = spacing_options
     result.segmentation = segmentation

@@ -96,6 +96,53 @@ class Api:
             return {"error": "index_error"}
         return _result_to_dict(result)
 
+    def get_rules_summary(self) -> list[dict]:
+        """사이드바용 규정 유형별 요약을 돌려준다."""
+        rules = load_rules()
+        categories = [
+            {"id": "c2", "title": "기본 원칙", "clauses": ["제2항"],
+             "summary": "문장의 각 단어는 띄어 씀을 원칙으로 한다."},
+            {"id": "c41", "title": "조사", "clauses": ["제41항"],
+             "summary": "조사는 앞말에 붙여 쓴다. (꽃이, 학교에서처럼)"},
+            {"id": "c42", "title": "의존 명사", "clauses": ["제42항"],
+             "summary": "의존 명사는 띄어 쓴다. (아는 것, 할 수, 먹을 만큼)"},
+            {"id": "c43", "title": "단위 명사", "clauses": ["제43항"],
+             "summary": "단위 명사는 띄어 쓴다. 숫자 뒤 붙여 쓸 수 있다. (차 한 대)"},
+            {"id": "c44", "title": "수의 띄어쓰기", "clauses": ["제44항"],
+             "summary": "수를 적을 때 만 단위로 띄어 쓴다."},
+            {"id": "c45", "title": "열거하는 말", "clauses": ["제45항"],
+             "summary": "겸, 및, 등, 대 등 열거하는 말은 띄어 쓴다."},
+            {"id": "c46", "title": "단음절 연속", "clauses": ["제46항"],
+             "summary": "단음절 단어가 연이어 나타날 때 붙여 쓸 수 있다."},
+            {"id": "c47", "title": "보조 용언", "clauses": ["제47항"],
+             "summary": "보조 용언은 띄어 씀이 원칙, 붙여 씀도 허용. (먹어 보다/먹어보다)"},
+            {"id": "c48", "title": "이름과 호칭", "clauses": ["제48항"],
+             "summary": "성과 이름은 붙여 쓰고 호칭어는 띄어 쓴다. (홍길동 씨)"},
+            {"id": "c49", "title": "고유 명사", "clauses": ["제49항"],
+             "summary": "고유 명사는 단어별로 띄어 씀이 원칙, 단위별 붙여 쓸 수 있다."},
+            {"id": "c50", "title": "전문 용어", "clauses": ["제50항"],
+             "summary": "전문 용어는 띄어 씀이 원칙, 붙여 쓸 수 있다."},
+        ]
+        result = []
+        for cat in categories:
+            details = []
+            for clause_id in cat["clauses"]:
+                clause = rules.get(clause_id)
+                if clause:
+                    details.append({
+                        "num": clause_id,
+                        "text": clause.get("조항", ""),
+                        "examples": clause.get("예시", []) or [],
+                        "commentary": clause.get("해설", ""),
+                    })
+            result.append({
+                "id": cat["id"],
+                "title": cat["title"],
+                "summary": cat["summary"],
+                "details": details,
+            })
+        return result
+
 
 def _html_path() -> Path:
     # PyInstaller onefile에서도 동작하도록 _MEIPASS 우선.
