@@ -23,6 +23,7 @@ class Entry:
     group_code: int | None = None
     spacing_badge: str | None = None
     target_code: int | None = None
+    role: str | None = None        # 분해 구성요소의 역할/정확도 라벨 (예: "본용언 · 정확도 높음")
 
 
 @dataclass(slots=True)

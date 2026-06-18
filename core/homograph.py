@@ -15,7 +15,8 @@ from dataclasses import dataclass
 
 from core.conjugation import is_predicate_inflection
 from core.local_index import exists_with_pos
-from core.schema import InspectResult, RuleHint
+from core.presenter import make_component_entry
+from core.schema import Entry, InspectResult, RuleHint
 
 # 대비 유형
 PARTICLE = "particle"   # 의존 명사(띄움) vs 조사(붙임)   — 용언/체언으로 자동 판별 가능
@@ -103,6 +104,29 @@ _ENDING_BLOCKS: dict[str, tuple[str, ...]] = {
     "지": ("든", "던"),
 }
 
+# 앞말의 끝 음절이 이것이면 의존 명사(띄움) 해석을 억제하고 어미(붙임) 단일 안내만 한다.
+# 의존 명사 '지'(시간 경과)는 과거 관형사형 -(으)ㄴ 뒤에만 온다(간 지, 떠난 지).
+# '가는지'처럼 -는지로 끝나면 이는 어미이므로 '가는 지'로 띄우는 일은 거의 없다.
+_BOUND_READING_BLOCK: dict[str, tuple[str, ...]] = {
+    "지": ("는",),
+}
+
+
+def _prefix_entries(prefix: str, db_path: str | None) -> list[Entry]:
+    """앞말이 사전에 등재된 체언이면 그 정보를 보인다.
+
+    동형이의(데/지/중 …)는 '글자' 자체가 핵심이므로, 앞말이 용언 활용형이면
+    본용언 복원은 후보가 과다(예: '가는'→가다·갈다·가늘다)해 노이즈가 되므로 생략한다.
+    """
+    noun = make_component_entry(
+        prefix, prefer=("명사", "대명사", "수사"), role="앞말(체언)", db_path=db_path
+    )
+    return [noun] if noun is not None else []
+
+
+def _key_entry(key: str, prefer: tuple[str, ...], role: str, db_path: str | None) -> Entry | None:
+    return make_component_entry(key, prefer=prefer, role=role, db_path=db_path)
+
 
 def _match(joined: str) -> str | None:
     """입력 끝에서 가장 긴 동형이의 글자를 찾는다(앞말이 있어야 함)."""
@@ -175,6 +199,56 @@ def detect_homograph(text: str, db_path: str | None = None) -> InspectResult | N
 
     spaced = f"{prefix} {key}"
 
+    # 의존 명사 해석 억제: '가는지' 등 → 어미(붙임) 단일 안내.
+    block = _BOUND_READING_BLOCK.get(key, ())
+    if any(prefix.endswith(b) for b in block):
+        ending = next((r for r in readings if r.spacing == "붙임"), readings[-1])
+        entries = _prefix_entries(prefix, db_path)
+        return InspectResult(
+            input=text,
+            found=True,
+            rule_hints=[_rule_hint(ending)],
+            spacing_options=[joined],
+            entries=entries,
+            notes=[
+                f"‘{key}’ 앞이 ‘…{prefix[-1]}’로 끝나 어미(-{prefix[-1]}{key})로 봅니다 → 붙여 씁니다: ‘{joined}’.",
+                f"의존 명사 ‘{key}’({readings[0].gloss})는 과거 관형사형 뒤에만 옵니다(예: {readings[0].example}).",
+            ],
+        )
+
+    # BOUND 유형의 '한 단어(굳어진 합성어)' 붙임 해석은 사전 등재가 전제다.
+    # 이 분기는 미등재 입력에서만 도달하므로(등재어는 사전 경로로 빠짐) 그 해석을 제외한다.
+    # → '얼마전'은 '얼마 전'(띄움)만 안내하고 붙임은 보이지 않는다. ('간' 같은 접미사 붙임은 유지)
+    if kind == BOUND:
+        filtered = [r for r in readings if r.pos != "한 단어"]
+        if filtered and len(filtered) < len(readings):
+            readings = filtered
+            if len(readings) == 1:
+                only = readings[0]
+                answer = spaced if only.spacing == "띄움" else joined
+                entries = _prefix_entries(prefix, db_path)
+                key_entry = _key_entry(
+                    key, ("의존 명사", "명사", "접사"), only.pos, db_path
+                )
+                if key_entry is not None:
+                    entries.append(key_entry)
+                notes = [
+                    f"‘{key}’은(는) {only.pos}(으)로 "
+                    f"{'띄어' if only.spacing == '띄움' else '붙여'} 씁니다 — {only.gloss}."
+                ]
+                if only.spacing == "띄움":
+                    notes.append(
+                        f"‘{joined}’은 사전에 한 단어로 올라 있지 않으므로 붙여 쓰지 않습니다."
+                    )
+                return InspectResult(
+                    input=text,
+                    found=True,
+                    rule_hints=[_rule_hint(only)],
+                    spacing_options=[answer],
+                    entries=entries,
+                    notes=notes,
+                )
+
     resolved = _resolve_particle(prefix, db_path) if kind == PARTICLE else None
     if resolved is not None:
         main = next(r for r in readings if r.spacing == resolved)
@@ -192,11 +266,17 @@ def detect_homograph(text: str, db_path: str | None = None) -> InspectResult | N
                 f"→ 붙여 씁니다: ‘{answer}’."
             )
             ref = f"참고로 ‘{other.example}’처럼 용언 활용형 뒤에서는 ‘{key}’이(가) 의존 명사가 되어 띄어 씁니다(제42항)."
+        key_prefer = ("의존 명사",) if main.spacing == "띄움" else ("조사", "접사")
+        entries = _prefix_entries(prefix, db_path)
+        key_entry = _key_entry(key, key_prefer, main.pos, db_path)
+        if key_entry is not None:
+            entries.append(key_entry)
         return InspectResult(
             input=text,
             found=True,
             rule_hints=[_rule_hint(main)],
             spacing_options=[answer],
+            entries=entries,
             notes=[decided, ref],
         )
 
@@ -205,10 +285,15 @@ def detect_homograph(text: str, db_path: str | None = None) -> InspectResult | N
         "같은 글자라도 품사에 따라 띄어쓰기가 갈립니다 — 맥락을 보고 고르세요.",
         _ambiguous_hint(kind, prefix, spaced, joined, db_path),
     ]
+    entries = _prefix_entries(prefix, db_path)
+    key_entry = _key_entry(key, ("의존 명사", "조사", "접사"), readings[0].pos, db_path)
+    if key_entry is not None:
+        entries.append(key_entry)
     return InspectResult(
         input=text,
         found=True,
         rule_hints=rule_hints,
         spacing_options=list(dict.fromkeys([spaced, joined])),
+        entries=entries,
         notes=notes,
     )

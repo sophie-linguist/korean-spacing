@@ -42,10 +42,19 @@ def test_ending_type_meaning_hint():
 
 
 def test_bound_noun_type():
-    # 중: 의존명사(띄움) vs 굳은 합성어(붙임)
+    # 회의중(미등재): 의존 명사 '중'으로 띄어 씀(제42항)만 안내한다.
+    # 굳은 합성어(은연중·한밤중)의 붙임은 사전 등재가 전제이므로 미등재 입력엔 안내하지 않는다.
     r = inspect("회의중")
-    assert _clauses(r) == {"제42항", "제2항"}
-    assert "회의 중" in r.spacing_options
+    assert _clauses(r) == {"제42항"}
+    assert r.spacing_options == ["회의 중"]
+
+
+def test_bound_noun_no_join_when_unregistered():
+    # 얼마전(미등재): '얼마'(명사) + '전'(명사) → 띄어 씀(제2항)만. 붙임은 등재 전제이므로 없음.
+    r = inspect("얼마전")
+    assert r.spacing_options == ["얼마 전"]
+    assert "제2항" in _clauses(r)
+    assert "얼마전" not in r.spacing_options
 
 
 def test_homograph_does_not_steal_other_paths():

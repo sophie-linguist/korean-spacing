@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from core.adnoun import detect_adnominal_noun
 from core.caret_rule import caret_hint
 from core.compound import detect_compound
 from core.connective import detect_connective
@@ -11,9 +12,10 @@ from core.local_index import lookup
 from core.normalize import normalize_query
 from core.numeral import detect_numeral
 from core.particle import detect_particle_chain
+from core.conjugation import base_forms_with_confidence
 from core.pos_mapper import map_entry
-from core.presenter import present
-from core.schema import InspectResult, RuleHint
+from core.presenter import make_component_entry, present
+from core.schema import Entry, InspectResult, RuleHint
 from core.segmenter import COUNTERS, segment, segment_combined
 
 COUNTER_QUANTIFIERS = {"한", "두", "세", "네", "다섯", "여섯", "일곱", "여덟", "아홉", "열"}
@@ -117,7 +119,9 @@ def _combined_result(normalized: str, db_path: str | None) -> InspectResult | No
 
     segmentation, category, spaced = matched
     joined = "".join(normalized.split())
-    spacing_options = list(dict.fromkeys([spaced, joined]))
+
+    head = segmentation.candidates[0].left
+    tail = segmentation.candidates[0].right
 
     if category == "보조용언":
         rule = RuleHint(
@@ -126,6 +130,9 @@ def _combined_result(normalized: str, db_path: str | None) -> InspectResult | No
             요지="보조 용언은 띄어 씀을 원칙으로 하되 경우에 따라 붙여 씀도 허용합니다.",
         )
         note = "보조 용언 결합형으로 판단되어 제47항 원칙/허용을 함께 안내합니다."
+        tail_prefer = ("보조 동사", "보조 형용사", "동사", "형용사")
+        # 제47항: 띄어 씀(원칙)·붙여 씀(허용) 둘 다 가능.
+        spacing_options = list(dict.fromkeys([spaced, joined]))
     else:
         rule = RuleHint(
             항번호="제42항",
@@ -133,6 +140,11 @@ def _combined_result(normalized: str, db_path: str | None) -> InspectResult | No
             요지="의존 명사는 앞말과 띄어 씁니다.",
         )
         note = "관형사형 + 의존 명사 결합형으로 판단되어 제42항을 안내합니다."
+        tail_prefer = ("의존 명사",)
+        # 제42항: 의존 명사는 띄어 씀이 원칙 — 붙여 쓴 형은 옵션에서 제외.
+        spacing_options = [spaced]
+
+    entries = _combined_entries(head, tail, tail_prefer, db_path)
 
     return InspectResult(
         input=normalized,
@@ -140,8 +152,33 @@ def _combined_result(normalized: str, db_path: str | None) -> InspectResult | No
         rule_hints=[rule],
         spacing_options=spacing_options,
         segmentation=segmentation,
+        entries=entries,
         notes=[note],
     )
+
+
+def _combined_entries(
+    head: str, tail: str, tail_prefer: tuple[str, ...], db_path: str | None
+) -> list[Entry]:
+    """본용언 + 보조용언/의존명사 결합형의 구성요소 사전 정보를 만든다.
+
+    본용언은 머리에서 기본형을 복원해 후보별 정확도를 함께 보인다.
+    """
+    entries: list[Entry] = []
+    for base, high in base_forms_with_confidence(head, db_path=db_path):
+        role = "본용언 · 정확도 높음" if high else "본용언 · 참고"
+        e = make_component_entry(
+            base, prefer=("동사", "형용사"), role=role, base_word=base, db_path=db_path
+        )
+        if e is not None:
+            e.word = f"{head} → {base}"
+            entries.append(e)
+
+    tail_role = "보조 용언" if "보조" in tail_prefer[0] else "의존 명사"
+    tail_entry = make_component_entry(tail, prefer=tail_prefer, role=tail_role, db_path=db_path)
+    if tail_entry is not None:
+        entries.append(tail_entry)
+    return entries
 
 
 def inspect(text: str, db_path: str | None = None) -> InspectResult:
@@ -194,15 +231,37 @@ def inspect(text: str, db_path: str | None = None) -> InspectResult:
         particle_case = detect_particle_chain(normalized, db_path=db_path)
         if particle_case is not None:
             return particle_case
+
+        # 관형사 + 자립 명사(한잎 → 한 잎). 조사 연쇄(너도→너+도)에 우선권을 주기 위해
+        # 조사·합성어 판별 뒤에 둔다.
+        adnominal_case = detect_adnominal_noun(normalized, db_path=db_path)
+        if adnominal_case is not None:
+            adnominal_case.segmentation = segmentation
+            return adnominal_case
         result.hint = "‘-다’로 끝나는 기본형(먹다·예쁘다)이나 ‘아는데·차한대’처럼 붙여 쓴 표현으로 검색해 보세요."
         result.segmentation = segmentation
         return result
 
     rule_hints, spacing_options = _collect_rule_hints(entries)
 
-    # 보조용언 병행 안내: 사전에 등재된 단어라도 보조용언 꼬리가 매칭되면 제47항 병행
+    # 사전에 한 단어로 등재된 표현이 보조용언 구성으로도 분석되는 경우(도와주다·알아보다 등):
+    # 한 단어이므로 붙여 씀(제2항)이 우선이고, 보조용언으로 보면 띄어 쓸 수도 있음(제47항)을
+    # 참고로 덧붙인다. (이 분기는 이미 'entries 발견'(=사전 등재) 경로이다.)
     combined_extra = _combined_result(normalized, db_path)
     if combined_extra is not None:
+        joined = "".join(normalized.split())
+        if not any(h.항번호 == "제2항" for h in rule_hints):
+            rule_hints.insert(
+                0,
+                RuleHint(
+                    항번호="제2항",
+                    원칙허용="붙임",
+                    요지="사전에 한 단어로 올라 있으므로 붙여 씁니다.",
+                ),
+            )
+        if joined in spacing_options:
+            spacing_options.remove(joined)
+        spacing_options.insert(0, joined)  # 붙여 쓴 형(한 단어)을 맨 앞에
         for rh in combined_extra.rule_hints:
             if rh.항번호 == "제47항" and not any(h.항번호 == "제47항" for h in rule_hints):
                 rule_hints.append(rh)

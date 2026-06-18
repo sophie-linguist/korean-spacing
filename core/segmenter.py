@@ -16,9 +16,14 @@ _FALLBACK_AUX_VERB_TAILS = (
     "보다", "주다", "버리다", "두다", "놓다", "싶다", "말다", "대다",
     "가다", "오다", "내다",
 )
-_FALLBACK_DEP_NOUN_TAILS = (
-    "만큼", "대로", "만", "듯", "척", "체", "양", "뻔", "법", "직",
-    "데", "줄", "수", "바", "리", "뿐", "터", "채",
+# 검증된 형식성 의존 명사 목록(수작업 큐레이션).
+# 주의: aux_lexicon.json의 자동추출 dep_noun(1258개)은 일반명사('잎·도·끝·물·힘'…)가
+# 대거 섞여 있어 오분할('한잎'→'한 잎' 의존명사, '너도'→'너 도')을 일으키므로 쓰지 않는다.
+_DEP_NOUN_TAILS = (
+    "것", "거", "데", "바", "수", "줄", "리", "뿐", "채", "체", "척", "양", "듯",
+    "만큼", "만치", "대로", "만", "지", "터", "뻔", "법", "직",
+    "따위", "때문", "마련", "무렵", "즈음", "노릇", "나름", "따름", "나위",
+    "겸", "등", "딴", "둥", "망정", "셈", "족족",
 )
 
 _LEXICON_PATH = Path(__file__).with_name("aux_lexicon.json")
@@ -26,14 +31,16 @@ _LEXICON_PATH = Path(__file__).with_name("aux_lexicon.json")
 
 @lru_cache(maxsize=1)
 def _tail_category() -> dict[str, str]:
-    """꼬리 → 분류('보조용언'/'의존명사') 매핑. JSON 있으면 로드, 없으면 폴백."""
+    """꼬리 → 분류('보조용언'/'의존명사') 매핑.
+
+    의존명사는 큐레이션 목록(_DEP_NOUN_TAILS)을 쓰고, 보조용언은 aux_lexicon.json의
+    aux_verb를 쓰되 파일이 없으면 폴백한다.
+    """
+    aux: tuple[str, ...] = _FALLBACK_AUX_VERB_TAILS
     if _LEXICON_PATH.exists():
         data = json.loads(_LEXICON_PATH.read_text(encoding="utf-8"))
-        aux = data.get("aux_verb", _FALLBACK_AUX_VERB_TAILS)
-        dep = data.get("dep_noun", _FALLBACK_DEP_NOUN_TAILS)
-    else:
-        aux, dep = _FALLBACK_AUX_VERB_TAILS, _FALLBACK_DEP_NOUN_TAILS
-    mapping = {t: "의존명사" for t in dep}
+        aux = tuple(data.get("aux_verb", _FALLBACK_AUX_VERB_TAILS))
+    mapping = {t: "의존명사" for t in _DEP_NOUN_TAILS}
     mapping.update({t: "보조용언" for t in aux})  # 겹치면 보조 용언 우선
     return mapping
 
