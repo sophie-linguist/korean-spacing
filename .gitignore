@@ -17,8 +17,13 @@ build/*.db
 
 # Local dictionary/index data
 *.db
+*.db-shm
+*.db-wal
 dict.db
 전체 내려받기_우리말샘_json_20260603/
+
+# WSL/Windows metadata
+*:Zone.Identifier
 
 # Environment and secrets
 .env

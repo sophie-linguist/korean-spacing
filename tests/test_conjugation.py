@@ -62,3 +62,38 @@ def test_gate_rejects_nouns():
 def test_gate_empty():
     assert cj.is_predicate_inflection("") is False
     assert cj.is_predicate_inflection("   ") is False
+
+
+# --- 제18항 불규칙 활용 + 제34~38항 준말: 게이트 통과 + 표준 기본형 '정확도 높음' ---
+# 예시는 업로드된 한글 맞춤법 형태 규정(맞춤법_형태_규정.json)에서 도출.
+
+@pytest.mark.parametrize(
+    "head,expected_base",
+    [
+        # 르 불규칙(제18항 ⑨)
+        ("불러", "부르다"), ("갈라", "가르다"), ("몰라", "모르다"), ("흘러", "흐르다"),
+        # 러 불규칙(제18항 ⑧)
+        ("이르러", "이르다"),
+        # ㅂ 불규칙(제18항 ⑥)
+        ("도와", "돕다"), ("구워", "굽다"), ("고와", "곱다"),
+        # ㅎ 불규칙(제18항 ③)
+        ("그래", "그렇다"), ("노래", "노랗다"), ("빨개", "빨갛다"),
+        # ㅜ/ㅡ 탈락(제18항 ④)
+        ("퍼", "푸다"), ("꺼", "끄다"),
+        # ㅅ·ㄷ 불규칙(제18항 ②⑤)
+        ("지어", "짓다"), ("걸어", "걷다"),
+        # 준말/모음 축약(제34~38항)
+        ("봐", "보다"), ("와", "오다"), ("줘", "주다"), ("돼", "되다"), ("해", "하다"),
+        ("보여", "보이다"), ("가", "가다"),
+    ],
+)
+def test_irregular_gate_and_restore(head, expected_base):
+    assert cj.is_predicate_inflection(head) is True, f"gate failed: {head}"
+    high = [b for b, ok in cj.base_forms_with_confidence(head) if ok]
+    assert expected_base in high, f"{head}: {expected_base} not in high={high}"
+
+
+def test_gate_rejects_more_nouns():
+    # 명사 오분할 방지 — 흔한 명사는 거부되어야 한다.
+    for n in ["나라", "자라", "다리", "우리", "허리", "시간", "학교", "마음", "나무"]:
+        assert cj.is_predicate_inflection(n) is False, n

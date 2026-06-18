@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 from core.local_index import lookup
+from core.presenter import make_component_entry
 from core.schema import InspectResult, RuleHint
 
 # 고빈도 조사 닫힌 목록 (긴 것 우선 매칭을 위해 길이 역순 정렬)
@@ -53,23 +54,58 @@ def _strip_particles(text: str) -> list[str] | None:
     return [remaining, *reversed(found)]
 
 
+def _peel_to_registered_root(
+    joined: str, db_path: str | None
+) -> tuple[str, list[str]] | None:
+    """끝에서 조사를 하나씩 떼되, 남은 부분이 사전 등재어가 되는 '가장 긴 어근'에서 멈춘다.
+
+    '하나도'는 '도'만 떼면 '하나'(등재어)가 되므로 거기서 멈춘다(→ '하'+'나'+'도' 과분해 방지).
+    반환: (어근, [조사…]) 또는 None.
+    """
+    remaining = joined
+    peeled: list[str] = []  # 뗀 순서(끝 조사부터)
+    while True:
+        if peeled and lookup(remaining, db_path):
+            return remaining, list(reversed(peeled))
+        for p in _PARTICLES:
+            if remaining.endswith(p) and len(remaining) > len(p):
+                peeled.append(p)
+                remaining = remaining[: -len(p)]
+                break
+        else:
+            return None
+
+
 def detect_particle_chain(text: str, db_path: str | None = None) -> InspectResult | None:
     """입력이 '체언 + 조사 연쇄'이면 제41항 안내를 만든다."""
     joined = "".join(text.strip().split())
-    parts = _strip_particles(joined)
-    if parts is None or len(parts) < 2:
+    peeled = _peel_to_registered_root(joined, db_path)
+    if peeled is None:
         return None
 
-    root = parts[0]
-    particles = parts[1:]
+    root, particles = peeled
+    if not particles:
+        return None
 
-    # 잔여(root)가 사전에 등재된 단어인지 확인
+    # 잔여(root)가 사전에 등재된 단어인지 확인(가장 긴 어근에서 이미 확인됨)
     entries = lookup(root, db_path)
     if not entries:
         return None
 
     particle_str = " + ".join(particles)
     display = root + "".join(particles)
+
+    # 구성요소 사전 정보: 앞말(체언) + 조사들.
+    component_entries = []
+    root_entry = make_component_entry(
+        root, prefer=("대명사", "명사", "수사"), role="앞말(체언)", db_path=db_path
+    )
+    if root_entry is not None:
+        component_entries.append(root_entry)
+    for p in particles:
+        pe = make_component_entry(p, prefer=("조사",), role="조사", db_path=db_path)
+        if pe is not None:
+            component_entries.append(pe)
 
     rule = RuleHint(
         항번호="제41항",
@@ -81,6 +117,7 @@ def detect_particle_chain(text: str, db_path: str | None = None) -> InspectResul
         found=True,
         rule_hints=[rule],
         spacing_options=[display],
+        entries=component_entries,
         notes=[
             f"'{root}'에 조사 '{particle_str}'이(가) 결합한 형태입니다.",
             "조사가 둘 이상 연속되어도 앞말에 붙여 씁니다(제41항).",
