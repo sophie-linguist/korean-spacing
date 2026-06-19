@@ -125,6 +125,26 @@ def _big_number_result(text: str, joined: str, spaced: str) -> InspectResult:
     )
 
 
+def _big_number_ok_result(text: str, joined: str) -> InspectResult:
+    """이미 만 단위로 바르게 적힌 큰 수에 대한 긍정 확인(침묵 대신).
+
+    '삼천이백억'처럼 만/억/조 자리가 맨 끝에 있어 더 띄어 쓸 곳이 없는 경우,
+    바꿀 게 없다고 침묵하면 '처리 못 함'으로 오해되므로 '이대로 맞다'고 알려 준다.
+    """
+    rule = RuleHint(
+        항번호="제44항",
+        원칙허용="확인",
+        요지="‘만, 억, 조’ 단위로 끊어 띄어 쓰는데, 이 수는 이미 바르게 적혀 더 띄어 쓸 곳이 없습니다.",
+    )
+    return InspectResult(
+        input=text,
+        found=True,
+        rule_hints=[rule],
+        spacing_options=[joined],
+        notes=[f"‘{joined}’은(는) 이미 만 단위로 바르게 적혔습니다. 그대로 쓰면 됩니다."],
+    )
+
+
 def _number_is_strong(num: str) -> bool:
     """오탐 억제용: 고유어 수이거나 2글자 이상이면 '강한' 수로 본다.
 
@@ -158,5 +178,9 @@ def detect_numeral(
         spaced = _space_man_units(joined)
         if spaced != joined:
             return _big_number_result(text, joined, spaced)
+        # 만 단위가 맨 끝에 있어 띄울 곳이 없는 큰 수('삼천이백억')는 침묵 대신 긍정 확인.
+        # strong_only(사전 등재어 병행 안내)일 때는 확인 노트가 군더더기이므로 제외한다.
+        if not strong_only and len(joined) >= 2 and any(ch in _MAN_UNITS for ch in joined):
+            return _big_number_ok_result(text, joined)
 
     return None

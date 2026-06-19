@@ -59,6 +59,21 @@ def test_man_in_large_number_not_treated_as_homograph():
     assert _clauses(inspect("12억3456만")) == {"제44항"}
 
 
+def test_already_correct_large_number_gets_positive_confirmation():
+    # 만/억/조가 맨 끝이라 띄울 곳이 없는 큰 수는 침묵 대신 '이대로 맞다'고 확인한다.
+    for q in ["삼천이백억", "이천억"]:
+        r = inspect(q)
+        assert r.found, q
+        assert "제44항" in _clauses(r), q
+        assert r.spacing_options == [q], q
+        assert any("바르게 적혔" in n for n in r.notes), q
+
+
+def test_plain_number_without_man_unit_stays_silent():
+    # 만 단위가 없는 수(삼백)는 제44항 확인 대상이 아니다(억지 확인 금지).
+    assert "제44항" not in _clauses(inspect("삼백"))
+
+
 def test_dictionary_word_still_gets_number_guidance():
     # 사전에 우연히 있는 '두마리(두마-리)'도 제43항 안내가 비지 않음(가림 방지)
     r = inspect("두마리")
