@@ -96,17 +96,33 @@ def _unit_result(text: str, prefix: str, num: str, unit: str) -> InspectResult:
     show_num = _NATIVE_BEFORE_UNIT.get(spaced_num, spaced_num)
     spaced = " ".join(filter(None, [prefix, show_num, unit]))
     joined_unit = " ".join(filter(None, [prefix, show_num + unit]))
-    rule = RuleHint(
+    rule43 = RuleHint(
         항번호="제43항",
         원칙허용="원칙+허용",
         요지="단위를 나타내는 명사는 띄어 씀이 원칙이며, 숫자나 수 관형사 뒤에서는 붙여 쓸 수 있습니다.",
     )
+    rules = [rule43]
+    note = f"수 ‘{show_num}’와(과) 단위 ‘{unit}’의 결합으로 보아 제43항을 안내합니다."
+    # 수 부분에 만 단위 경계가 있어 띄어졌으면(삼천이백억 오천만 원) 제44항도 함께 적용된다.
+    if spaced_num != num:
+        rules.insert(
+            0,
+            RuleHint(
+                항번호="제44항",
+                원칙허용="원칙",
+                요지="수를 적을 때에는 ‘만, 억, 조’ 단위로 띄어 씁니다.",
+            ),
+        )
+        note = (
+            f"수 ‘{show_num}’는 만 단위로 띄우고(제44항), 단위 ‘{unit}’은(는) "
+            f"앞말과 띄어 씁니다(제43항)."
+        )
     return InspectResult(
         input=text,
         found=True,
-        rule_hints=[rule],
+        rule_hints=rules,
         spacing_options=list(dict.fromkeys([spaced, joined_unit])),
-        notes=[f"수 ‘{show_num}’와(과) 단위 ‘{unit}’의 결합으로 보아 제43항을 안내합니다."],
+        notes=[note],
     )
 
 

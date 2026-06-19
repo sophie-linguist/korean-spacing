@@ -54,6 +54,16 @@ def test_large_number_man_units():
         assert spaced in r.spacing_options, q
 
 
+def test_large_number_plus_unit_cites_both_clauses():
+    # 만 단위 띄어쓰기(제44항)와 단위 명사 띄어쓰기(제43항)가 함께 적용되는 경우
+    for q, spaced in [("삼천이백억오천만원", "삼천이백억 오천만 원"),
+                      ("12억3456만원", "12억 3456만 원")]:
+        r = inspect(q)
+        cl = _clauses(r)
+        assert "제44항" in cl and "제43항" in cl, q
+        assert spaced in r.spacing_options, q
+
+
 def test_man_in_large_number_not_treated_as_homograph():
     # '12억3456만'의 '만'은 수 단위지 의존명사/조사가 아님
     assert _clauses(inspect("12억3456만")) == {"제44항"}

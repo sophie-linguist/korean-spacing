@@ -31,22 +31,27 @@ MIN_INPUT_LEN = 3       # 너무 짧은 입력은 합성어로 보지 않음
 MIN_PIECE_LEN = 2       # 1음절 조각은 우연 매칭이 많아 분절 신뢰도에서 제외
 
 
-def _noun_pieces(joined: str) -> dict[str, set[str | None]]:
-    """입력의 모든 부분문자열 중 '명사로 쓰이는 표제어'를 모아 {조각: {전문분야...}}.
+def _noun_pieces(joined: str) -> tuple[dict[str, set[str | None]], dict[str, str]]:
+    """입력의 모든 부분문자열 중 '명사로 쓰이는 표제어'를 조회한다.
 
+    반환: ({조각: {전문분야...}}, {조각: 띄어쓴_표기}).
     일반 명사(pos에 '명사' 포함, 의존명사 제외)와 구(word_unit='구') 표제어를 포함한다.
     구는 '인공^지능'처럼 pos가 비어 있는 합성 표제어를 잡기 위함이다.
+    조각 자체가 '^'(어절 경계)로 띄어 쓰는 합성 표제어면('나선^은하'→'나선 은하') 분절
+    예시를 더 정확히 펼치기 위해 그 표기를 spaced_map에 함께 모은다(정상나선은하→정상 나선 은하).
+    주의: word_spaced는 '^'와 '-'(접사 경계)를 모두 공백으로 바꿔 '위원-회'→'위원 회'처럼
+    붙여 써야 할 것까지 띄우므로 쓰지 않는다. word_raw에서 '^'만 공백으로 펼친다.
     """
     n = len(joined)
     subs = {joined[i:j] for i in range(n) for j in range(i + 1, n + 1)}
     if not subs:
-        return {}
+        return {}, {}
 
     placeholders = ",".join("?" * len(subs))
     con = get_connection()
     rows = con.execute(
         f"""
-        SELECT word_joined, cat FROM entries
+        SELECT word_joined, word_raw, cat FROM entries
         WHERE word_joined IN ({placeholders})
           AND (
               (pos LIKE '%명사%' AND pos NOT LIKE '%의존%')
@@ -57,9 +62,16 @@ def _noun_pieces(joined: str) -> dict[str, set[str | None]]:
     ).fetchall()
 
     pieces: dict[str, set[str | None]] = {}
+    spaced_map: dict[str, str] = {}
     for row in rows:
-        pieces.setdefault(row["word_joined"], set()).add(row["cat"])
-    return pieces
+        wj = row["word_joined"]
+        pieces.setdefault(wj, set()).add(row["cat"])
+        if "^" in (row["word_raw"] or ""):
+            # '-'(접사)는 붙이고 '^'(어절)만 띄운다.
+            caret_spaced = row["word_raw"].replace("-", "").replace("^", " ").strip()
+            if caret_spaced and caret_spaced != wj:
+                spaced_map[wj] = caret_spaced
+    return pieces, spaced_map
 
 
 def _best_cover(joined: str, pieces: dict[str, set[str | None]]) -> list[str] | None:
@@ -101,7 +113,7 @@ def detect_compound(text: str, db_path: str | None = None) -> InspectResult | No
     if len(joined) < MIN_INPUT_LEN:
         return None
 
-    pieces = _noun_pieces(joined)
+    pieces, spaced_map = _noun_pieces(joined)
     cover = _best_cover(joined, pieces)
     clean_cover = cover if (cover and len(cover) >= 2) else None
     # 모든 조각이 전문 분야(cat)를 가질 때만 전문용어로 인정 → 무의미어 오탐 차단.
@@ -133,7 +145,8 @@ def detect_compound(text: str, db_path: str | None = None) -> InspectResult | No
 
     # 띄어쓴 예시는 고신뢰일 때만(모든 조각 ≥2음절 + 전문분야 ≥1). 참고용임을 명시.
     if clean_cover and has_specialized:
-        spaced = " ".join(clean_cover)
+        # 조각 자체가 띄어 쓰는 합성 표제어면 그 표기로 펼친다(나선은하→나선 은하).
+        spaced = " ".join(spaced_map.get(p, p) for p in clean_cover)
         if spaced != joined:
             spacing_options.append(spaced)
             extra_notes.append(f"구성 예시(참고): {spaced} — 정확한 단어 경계는 사전 확인을 권장합니다.")

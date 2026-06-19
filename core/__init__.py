@@ -183,12 +183,20 @@ def _combined_entries(
 
 def inspect(text: str, db_path: str | None = None) -> InspectResult:
     normalized = normalize_query(text)
+    # 판정에 이르기까지 거친 탐색 단계를 기록한다(#3 — 결과 아래에 노출).
+    path: list[str] = [f"입력 정규화 → ‘{normalized}’"]
+
+    def _ret(result: InspectResult) -> InspectResult:
+        result.inspection_path = path
+        return result
 
     # 제45항 연결·열거어(및·겸·대·내지·등)는 여러 어절을 묶으므로, 단어 조회 전에
     # 먼저 처리해 합성어로 잘못 붙이지 않게 한다('이사장 및 이사' → '이사장및이사' 방지).
     connective_case = detect_connective(normalized)
     if connective_case is not None:
-        return connective_case
+        path.append("제45항 연결·열거어 검사 → 적용")
+        return _ret(connective_case)
+    path.append("제45항 연결·열거어 검사 → 해당 없음")
 
     segmentation = segment(normalized)
 
@@ -196,52 +204,73 @@ def inspect(text: str, db_path: str | None = None) -> InspectResult:
     result = present(entries, normalized)
 
     if not entries:
+        path.append("우리말샘 사전 조회 → 미등재")
         # 수 + 단위(제43항) / 큰 수 만 단위(제44항)를 가장 먼저 본다.
         # '열두'를 한 단어로 인식(열두 마리)하고, '12억3456만'의 '만'을
         # 의존명사/조사로 오인하지 않도록 동형이의 분기보다 앞에 둔다.
         numeral_case = detect_numeral(normalized, db_path=db_path)
         if numeral_case is not None:
+            path.append("수 표현(제43·44항) 검사 → 적용")
             numeral_case.segmentation = segmentation
-            return numeral_case
+            return _ret(numeral_case)
+        path.append("수 표현(제43·44항) 검사 → 해당 없음")
 
         counter_case = _counter_phrase_result(normalized, segmentation)
         if counter_case is not None:
-            return counter_case
+            path.append("수 관형사 + 단위 명사(띄어 쓴 입력, 제43항) 검사 → 적용")
+            return _ret(counter_case)
 
         counter_joined_case = _counter_joined_result(normalized, segmentation)
         if counter_joined_case is not None:
-            return counter_joined_case
+            path.append("수 관형사 + 단위 명사(붙은 입력, 제43항) 검사 → 적용")
+            return _ret(counter_joined_case)
+        path.append("수 관형사 + 단위 명사(제43항) 검사 → 해당 없음")
 
         homograph_case = detect_homograph(normalized, db_path=db_path)
         if homograph_case is not None:
-            return homograph_case
+            path.append("동형이의 글자(제41·42항: 만큼·대로·데·지…) 검사 → 적용")
+            return _ret(homograph_case)
+        path.append("동형이의 글자(제41·42항) 검사 → 해당 없음")
 
         combined_case = _combined_result(normalized, db_path)
         if combined_case is not None:
-            return combined_case
+            path.append("붙은 결합형(보조 용언·의존 명사, 용언 활용형 게이트) 검사 → 적용")
+            return _ret(combined_case)
+        path.append("붙은 결합형(보조 용언·의존 명사) 검사 → 해당 없음")
 
         honorific_case = detect_honorific(normalized, db_path=db_path)
         if honorific_case is not None:
-            return honorific_case
+            path.append("호칭·이름(제48항) 검사 → 적용")
+            return _ret(honorific_case)
+        path.append("호칭·이름(제48항) 검사 → 해당 없음")
 
         compound_case = detect_compound(normalized, db_path=db_path)
         if compound_case is not None:
-            return compound_case
+            path.append("합성어·전문어·고유명사(제49·50항) 검사 → 적용")
+            return _ret(compound_case)
+        path.append("합성어·전문어·고유명사(제49·50항) 검사 → 해당 없음")
 
         particle_case = detect_particle_chain(normalized, db_path=db_path)
         if particle_case is not None:
-            return particle_case
+            path.append("체언 + 조사 연쇄(제41항) 검사 → 적용")
+            return _ret(particle_case)
+        path.append("체언 + 조사 연쇄(제41항) 검사 → 해당 없음")
 
         # 관형사 + 자립 명사(한잎 → 한 잎). 조사 연쇄(너도→너+도)에 우선권을 주기 위해
         # 조사·합성어 판별 뒤에 둔다.
         adnominal_case = detect_adnominal_noun(normalized, db_path=db_path)
         if adnominal_case is not None:
+            path.append("관형사 + 자립 명사(제48항) 검사 → 적용")
             adnominal_case.segmentation = segmentation
-            return adnominal_case
+            return _ret(adnominal_case)
+        path.append("관형사 + 자립 명사 검사 → 해당 없음")
+
+        path.append("판정 근거 없음 → 다시 검색 안내")
         result.hint = "‘-다’로 끝나는 기본형(먹다·예쁘다)이나 ‘아는데·차한대’처럼 붙여 쓴 표현으로 검색해 보세요."
         result.segmentation = segmentation
-        return result
+        return _ret(result)
 
+    path.append(f"우리말샘 사전 조회 → 등재됨({len(entries)}개)")
     rule_hints, spacing_options = _collect_rule_hints(entries)
 
     # 사전에 한 단어로 등재된 표현이 보조용언 구성으로도 분석되는 경우(도와주다·알아보다 등):
@@ -285,7 +314,7 @@ def inspect(text: str, db_path: str | None = None) -> InspectResult:
     result.rule_hints = rule_hints
     result.spacing_options = spacing_options
     result.segmentation = segmentation
-    return result
+    return _ret(result)
 
 
 __all__ = ["inspect", "InspectResult"]

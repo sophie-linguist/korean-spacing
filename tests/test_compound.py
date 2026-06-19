@@ -11,7 +11,21 @@ def test_specialized_compound_recognized():
     assert r.found
     assert any(h.항번호 == "제50항" for h in r.rule_hints)
     assert "인공지능위원회" in r.spacing_options  # 붙임형
-    assert "인공지능 위원회" in r.spacing_options  # 고신뢰 구성 예시
+    # 구성 예시: '인공^지능'은 사전상 띄어 쓰는 합성어이므로 '인공 지능'으로 펼친다.
+    assert "인공 지능 위원회" in r.spacing_options
+
+
+def test_caret_compound_piece_expands_to_spaced():
+    # '나선^은하'처럼 조각이 사전상 띄어 쓰는 합성어면 그 표기로 펼친다.
+    r = inspect("정상나선은하")
+    assert r.found
+    assert "정상 나선 은하" in r.spacing_options
+
+
+def test_hyphen_piece_stays_joined():
+    # '위원-회'의 '-'(접사 경계)는 띄우지 않는다 → '위원 회'로 갈라지면 안 됨.
+    r = inspect("인공지능위원회")
+    assert not any("위원 회" in opt for opt in r.spacing_options)
 
 
 def test_org_suffix_triggers_without_clean_cover():

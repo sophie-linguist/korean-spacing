@@ -51,3 +51,5 @@ class InspectResult:
     segmentation: SegmentInfo | None = None
     notes: list[str] = field(default_factory=list)
     hint: str | None = None
+    # 판정에 이르기까지 거친 탐색 단계(사람이 읽는 한국어 한 줄씩). 마지막 항목이 최종 적용.
+    inspection_path: list[str] = field(default_factory=list)
