@@ -73,6 +73,10 @@ an `InspectResult` (see `core/schema.py`). The flow:
    → `detect_honorific` → `detect_compound` → `detect_particle_chain` → `detect_adnominal_noun`.
 5. If nothing matches, return a silent "re-search" hint.
 
+Every decision point appends a human-readable Korean line to `result.inspection_path` (which detector was
+tried + `적용`/`해당 없음`); the last entry is the one that matched. Shells surface this as an "어떤 순서로
+찾았는지" trace shown *after* the spacing judgment — it explains *how* the result was reached, not just what.
+
 When editing the cascade, **preserve ordering and the comments explaining it** — each position prevents a
 specific misclassification documented inline.
 
@@ -98,10 +102,14 @@ noun misclassification (e.g. `ㅏ←ㅡ`) are deliberately omitted.
 ### Detectors — `core/*.py`
 
 Each handles one rule family and returns an `InspectResult` or `None` (silence): `numeral.py` (제43·44항,
-units & 만-grouped large numbers), `homograph.py` (제41 vs 42 — particle vs dependent noun, the `만큼·대로·
-데·지` split decided by the preceding word's POS), `compound.py`, `particle.py` (제41항 chains),
-`adnoun.py` (제48항 adnominal + free noun), `connective.py` (제45항), `honorific.py` (제48항), `caret_rule.py`
-(제49·50항, using the `^` morpheme-boundary marker from 우리말샘 headwords).
+units & 만-grouped large numbers — when a unit follows a man-grouped number it cites **both** 제44항 and
+제43항, e.g. `삼천이백억오천만원`→`삼천이백억 오천만 원`; an already-correct large number returns a positive
+confirmation `원칙허용="확인"` instead of silence), `homograph.py` (제41 vs 42 — particle vs dependent noun,
+the `만큼·대로·데·지` split decided by the preceding word's POS), `compound.py` (제49·50항 — when a cover
+piece is itself a `^`-spaced headword it is expanded to that spacing, e.g. `정상나선은하`→`정상 나선 은하`),
+`particle.py` (제41항 chains), `adnoun.py` (제48항 adnominal + free noun), `connective.py` (제45항),
+`honorific.py` (제48항), `caret_rule.py` (제49·50항, using the `^` morpheme-boundary marker from 우리말샘
+headwords).
 
 ### Curated lists — closed by design
 
@@ -118,7 +126,10 @@ Single `entries` table (`build/schema.sql`) indexed from a 우리말샘 JSON dum
 (streamed with `ijson`). Each headword stores `word_raw` (with `^`/`-` morpheme markers preserved),
 `word_joined` (markers stripped, for joined lookup), `word_spaced`, `pos`, `definition`, `type`
 (`일반어`/dialect/etc.), `cat`, and `has_caret`/`caret_count`. Lookups match on `word_joined` OR
-`word_spaced`. Connections are cached per-path with `check_same_thread=False` (pywebview calls JS handlers
+`word_spaced`. **Caveat**: `word_spaced` turns *both* `^` (word boundary → space) and `-` (affix boundary →
+stays joined) into spaces, so it over-splits (`위원-회`→`위원 회`). Code that needs the true spaced form
+(e.g. `compound.py` piece expansion) must derive it from `word_raw` by spacing only `^` and dropping `-`.
+Connections are cached per-path with `check_same_thread=False` (pywebview calls JS handlers
 on a separate thread; reads are serial and read-only).
 
 **DB path resolution** (`local_index.py:resolve_db_path`): explicit `db_path` arg → `KOREAN_SPACING_DB_PATH`
