@@ -18,6 +18,10 @@ dev = [
   "pytest>=8.0.0",
   "pyinstaller>=6.0.0",
 ]
+# MCP(stdio) 셸: python -m shell.mcp.server
+mcp = [
+  "mcp>=1.0.0",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
