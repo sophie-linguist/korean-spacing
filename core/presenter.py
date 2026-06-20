@@ -1,6 +1,5 @@
 ﻿from __future__ import annotations
 
-from collections import defaultdict
 from typing import Any
 
 from core.local_index import lookup
@@ -81,17 +80,10 @@ def make_component_entry(
 
 
 def _fold_senses(items: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[str]]:
-    grouped: dict[int | None, list[dict[str, Any]]] = defaultdict(list)
-    for item in items:
-        grouped[item.get("group_code")].append(item)
-
-    selected: list[dict[str, Any]] = []
-    notes: list[str] = []
-    for group_code, group_items in grouped.items():
-        selected.extend(group_items[:3])
-        if len(group_items) > 3:
-            notes.append(f"group {group_code}: 외 {len(group_items)-3}개 뜻")
-    return selected, notes
+    # 한 표제어의 뜻을 임의로 잘라내면 사용자가 "전체가 안 나온다"고 느끼고,
+    # 잘린 자리에 내부 group_code가 도움말로 새어 나간다. 사전 조회 결과는
+    # 전부 보여 주는 것이 원칙이므로(판단은 사용자가 한다) 접지 않는다.
+    return list(items), []
 
 
 def present(entries: list[dict[str, Any]], query: str) -> InspectResult:
