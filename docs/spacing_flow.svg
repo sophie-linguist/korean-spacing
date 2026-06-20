@@ -1,0 +1,230 @@
+<svg viewBox="0 0 1100 1260" xmlns="http://www.w3.org/2000/svg" font-family="'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8a8077"/>
+    </marker>
+  </defs>
+
+  <rect fill="#f5f1e8" x="0" y="0" width="1100" height="1260"/>
+
+  <!-- ===== Header ===== -->
+  <text fill="#2b2722" x="60" y="74" font-size="40" font-weight="800" letter-spacing="-1">한국어 띄어쓰기 판단 흐름</text>
+  <text x="60" y="106" font-size="18" fill="#6f675b">붙여 쓴 표현을 받아, 처음 들어맞는 규정에서 멈춥니다 · 우리말샘 + 한글 맞춤법</text>
+  <line x1="60" y1="124" x2="1040" y2="124" stroke="#2b2722" stroke-width="2.5"/>
+
+  <!-- ===== Legend ===== -->
+  <g font-size="15" font-weight="600">
+    <rect x="60"  y="140" width="16" height="16" rx="3" fill="#e4ede5" stroke="#3f6b4f"/>
+    <text fill="#2b2722" x="84"  y="153">붙여 씀</text>
+    <rect x="176" y="140" width="16" height="16" rx="3" fill="#f6e6da" stroke="#b4622d"/>
+    <text fill="#2b2722" x="200" y="153">띄어 씀</text>
+    <rect x="292" y="140" width="16" height="16" rx="3" fill="#ece5f3" stroke="#7a5aa6"/>
+    <text fill="#2b2722" x="316" y="153">두 답 제시</text>
+    <rect x="424" y="140" width="16" height="16" rx="3" fill="#e0eaf2" stroke="#2f5d86"/>
+    <text fill="#2b2722" x="448" y="153">사전 조회</text>
+  </g>
+
+  <!-- ============================================================ -->
+  <!-- 한눈 요약 : 8단계 선형 순서                                    -->
+  <!-- ============================================================ -->
+  <text fill="#2b2722" x="60" y="206" font-size="22" font-weight="800">한눈 요약 — 확인 순서</text>
+  <text x="282" y="206" font-size="15" fill="#6f675b">위에서부터 차례로 통과시키며, 처음 걸리는 곳에서 답이 정해집니다</text>
+
+  <g font-size="16">
+    <!-- step chips -->
+    <g font-weight="700">
+      <rect x="60"   y="224" width="118" height="56" rx="10" fill="#ffffff" stroke="#c4baa8" stroke-width="1.5"/>
+      <text fill="#2b2722" x="119" y="248" text-anchor="middle">1 · 연결·열거어</text>
+      <text x="119" y="268" text-anchor="middle" font-size="13" fill="#6f675b">및·겸·대·등</text>
+
+      <rect x="194"  y="224" width="118" height="56" rx="10" fill="#e0eaf2" stroke="#2f5d86" stroke-width="1.5"/>
+      <text fill="#2b2722" x="253" y="248" text-anchor="middle">2 · 사전 조회</text>
+      <text x="253" y="268" text-anchor="middle" font-size="13" fill="#6f675b">한 단어인가</text>
+
+      <rect x="328"  y="224" width="118" height="56" rx="10" fill="#ffffff" stroke="#c4baa8" stroke-width="1.5"/>
+      <text fill="#2b2722" x="387" y="248" text-anchor="middle">3 · 수 표현</text>
+      <text x="387" y="268" text-anchor="middle" font-size="13" fill="#6f675b">단위·큰 수</text>
+
+      <rect x="462"  y="224" width="118" height="56" rx="10" fill="#ffffff" stroke="#c4baa8" stroke-width="1.5"/>
+      <text fill="#2b2722" x="521" y="248" text-anchor="middle">4 · 갈리는 글자</text>
+      <text x="521" y="268" text-anchor="middle" font-size="13" fill="#6f675b">만큼·대로·데·지</text>
+
+      <rect x="596"  y="224" width="118" height="56" rx="10" fill="#ffffff" stroke="#c4baa8" stroke-width="1.5"/>
+      <text fill="#2b2722" x="655" y="248" text-anchor="middle">5 · 결합형</text>
+      <text x="655" y="268" text-anchor="middle" font-size="13" fill="#6f675b">할만하다</text>
+
+      <rect x="730"  y="224" width="118" height="56" rx="10" fill="#ffffff" stroke="#c4baa8" stroke-width="1.5"/>
+      <text fill="#2b2722" x="789" y="248" text-anchor="middle">6 · 호칭·이름</text>
+      <text x="789" y="268" text-anchor="middle" font-size="13" fill="#6f675b">성명+직함</text>
+
+      <rect x="864"  y="224" width="84" height="56" rx="10" fill="#ffffff" stroke="#c4baa8" stroke-width="1.5"/>
+      <text fill="#2b2722" x="906" y="248" text-anchor="middle">7 · 조사</text>
+      <text x="906" y="268" text-anchor="middle" font-size="13" fill="#6f675b">체언+조사</text>
+
+      <rect x="962"  y="224" width="78" height="56" rx="10" fill="#ffffff" stroke="#c4baa8" stroke-width="1.5"/>
+      <text fill="#2b2722" x="1001" y="248" text-anchor="middle">8 · 관형사</text>
+      <text x="1001" y="268" text-anchor="middle" font-size="13" fill="#6f675b">+명사</text>
+    </g>
+    <!-- connecting arrows -->
+    <g stroke="#8a8077" stroke-width="2" fill="none">
+      <path d="M178 252 H194" marker-end="url(#arrow)"/>
+      <path d="M312 252 H328" marker-end="url(#arrow)"/>
+      <path d="M446 252 H462" marker-end="url(#arrow)"/>
+      <path d="M580 252 H596" marker-end="url(#arrow)"/>
+      <path d="M714 252 H730" marker-end="url(#arrow)"/>
+      <path d="M848 252 H864" marker-end="url(#arrow)"/>
+      <path d="M948 252 H962" marker-end="url(#arrow)"/>
+    </g>
+  </g>
+
+  <line x1="60" y1="316" x2="1040" y2="316" stroke="#c4baa8" stroke-width="2" fill="none"/>
+
+  <!-- ============================================================ -->
+  <!-- 상세 흐름                                                     -->
+  <!-- ============================================================ -->
+  <text fill="#2b2722" x="60" y="356" font-size="22" font-weight="800">상세 흐름</text>
+
+
+  <!-- ===================== 상세 흐름 본문 (재배치) ===================== -->
+  <!-- 중앙축 질문: x 400..700 (가로 300), 우측 결과: x 760..1040 -->
+
+  <!-- INPUT -->
+  <rect x="430" y="378" width="240" height="46" rx="23" fill="#2b2722"/>
+  <text x="550" y="407" text-anchor="middle" font-size="18" font-weight="700" fill="#f5f1e8">입력 → 공백 정리</text>
+  <path stroke="#8a8077" stroke-width="2" fill="none" d="M550 424 V446" marker-end="url(#arrow)"/>
+
+  <!-- Q1 연결·열거어  (y 446) -->
+  <rect x="400" y="446" width="300" height="56" rx="12" fill="#fffdf8" stroke="#c4baa8" stroke-width="1.5"/>
+  <text fill="#2b2722" x="550" y="471" text-anchor="middle" font-size="17" font-weight="700">연결·열거어인가?</text>
+  <text x="550" y="491" text-anchor="middle" font-size="14" fill="#6f675b">및 · 겸 · 대 · 내지 · 등</text>
+  <path stroke="#8a8077" stroke-width="2" fill="none" d="M700 474 H760" marker-end="url(#arrow)"/>
+  <text x="722" y="466" font-size="13" font-weight="700" fill="#6f675b">예</text>
+  <rect x="760" y="446" width="280" height="56" rx="12" fill="#f6e6da" stroke="#b4622d" stroke-width="1.5"/>
+  <text x="778" y="471" font-size="13" font-weight="800" fill="#b4622d">제45항</text>
+  <text fill="#2b2722" x="852" y="471" font-size="16" font-weight="700">앞뒤를 띄어 씀</text>
+  <text x="778" y="491" font-size="13" fill="#6f675b">한국어 및 한국문화</text>
+  <path stroke="#8a8077" stroke-width="2" fill="none" d="M550 502 V524" marker-end="url(#arrow)"/>
+  <text x="562" y="518" font-size="13" font-weight="700" fill="#6f675b">아니오</text>
+
+  <!-- Q2 사전 (y 524) -->
+  <rect x="400" y="524" width="300" height="56" rx="12" fill="#e0eaf2" stroke="#2f5d86" stroke-width="1.5"/>
+  <text x="550" y="549" text-anchor="middle" font-size="17" font-weight="700" fill="#2f5d86">사전에 있나?</text>
+  <text x="550" y="569" text-anchor="middle" font-size="14" fill="#6f675b">우리말샘 조회</text>
+  <path stroke="#8a8077" stroke-width="2" fill="none" d="M700 552 H760" marker-end="url(#arrow)"/>
+  <text x="722" y="544" font-size="13" font-weight="700" fill="#6f675b">있음</text>
+  <rect x="760" y="508" width="280" height="94" rx="12" fill="#e0eaf2" stroke="#2f5d86" stroke-width="1.5"/>
+  <text x="778" y="528" font-size="12.5" font-weight="800" fill="#2f5d86">뜻풀이 + 품사 보여 주기</text>
+  <text fill="#2b2722" x="778" y="547" font-size="12.5">· 한 단어 → 붙임 <tspan fill="#6f675b">(제2항)</tspan></text>
+  <text fill="#2b2722" x="778" y="565" font-size="12.5">· 보조 용언 → <tspan fill="#b4622d" font-weight="700">제47항</tspan></text>
+  <text fill="#2b2722" x="778" y="583" font-size="12.5">· 수+단위 → <tspan fill="#b4622d" font-weight="700">제43·44항</tspan></text>
+  <text fill="#2b2722" x="778" y="597" font-size="12.5">· 기관·전문어 → <tspan font-weight="700">제49·50항</tspan></text>
+  <path stroke="#8a8077" stroke-width="2" fill="none" d="M550 580 V602" marker-end="url(#arrow)"/>
+  <text x="562" y="596" font-size="13" font-weight="700" fill="#6f675b">없음</text>
+
+  <!-- Q3 수 표현 (y 602) -->
+  <rect x="400" y="602" width="300" height="56" rx="12" fill="#fffdf8" stroke="#c4baa8" stroke-width="1.5"/>
+  <text fill="#2b2722" x="550" y="627" text-anchor="middle" font-size="17" font-weight="700">수 표현인가?</text>
+  <text x="550" y="647" text-anchor="middle" font-size="14" fill="#6f675b">두 마리 · 12억 3456만</text>
+  <path stroke="#8a8077" stroke-width="2" fill="none" d="M700 630 H760" marker-end="url(#arrow)"/>
+  <text x="722" y="622" font-size="13" font-weight="700" fill="#6f675b">예</text>
+  <rect x="760" y="602" width="280" height="56" rx="12" fill="#f6e6da" stroke="#b4622d" stroke-width="1.5"/>
+  <text x="778" y="627" font-size="13" font-weight="800" fill="#b4622d">제43·44항</text>
+  <text fill="#2b2722" x="858" y="627" font-size="16" font-weight="700">단위·큰 수 띄움</text>
+  <text x="778" y="647" font-size="13" fill="#6f675b">스무 살 · 오백 원</text>
+  <path stroke="#8a8077" stroke-width="2" fill="none" d="M550 658 V680" marker-end="url(#arrow)"/>
+  <text x="562" y="674" font-size="13" font-weight="700" fill="#6f675b">아니오</text>
+
+  <!-- Q4 갈리는 글자 (y 680) -->
+  <rect x="400" y="680" width="300" height="56" rx="12" fill="#fffdf8" stroke="#c4baa8" stroke-width="1.5"/>
+  <text fill="#2b2722" x="550" y="705" text-anchor="middle" font-size="17" font-weight="700">갈리는 글자인가?</text>
+  <text x="550" y="725" text-anchor="middle" font-size="14" fill="#6f675b">만큼 · 대로 · 데 · 지 …</text>
+  <!-- 예 → 오른쪽으로 빠져 '앞말 품사' 서브질문(우측 영역, y 690) -->
+  <path stroke="#8a8077" stroke-width="2" fill="none" d="M700 708 H760" marker-end="url(#arrow)"/>
+  <text x="722" y="700" font-size="13" font-weight="700" fill="#6f675b">예</text>
+  <rect x="760" y="686" width="280" height="44" rx="10" fill="#fffdf8" stroke="#c4baa8" stroke-width="1.5"/>
+  <text fill="#2b2722" x="900" y="713" text-anchor="middle" font-size="15" font-weight="700">앞말 품사로 정해지나?</text>
+  <!-- 3갈래 결과: 우측 영역 아래 (y 752) -->
+  <path stroke="#8a8077" stroke-width="2" fill="none" d="M810 730 V752" marker-end="url(#arrow)"/>
+  <path stroke="#8a8077" stroke-width="2" fill="none" d="M900 730 V752" marker-end="url(#arrow)"/>
+  <path stroke="#8a8077" stroke-width="2" fill="none" d="M990 730 V752" marker-end="url(#arrow)"/>
+  <rect x="760" y="752" width="86" height="64" rx="10" fill="#e4ede5" stroke="#3f6b4f" stroke-width="1.5"/>
+  <text x="803" y="772" text-anchor="middle" font-size="12" fill="#6f675b">명사뿐</text>
+  <text x="803" y="791" text-anchor="middle" font-size="14" font-weight="700" fill="#3f6b4f">붙여 씀</text>
+  <text x="803" y="808" text-anchor="middle" font-size="12" font-weight="700" fill="#3f6b4f">제41항</text>
+  <rect x="856" y="752" width="88" height="64" rx="10" fill="#f6e6da" stroke="#b4622d" stroke-width="1.5"/>
+  <text x="900" y="772" text-anchor="middle" font-size="12" fill="#6f675b">용언뿐</text>
+  <text x="900" y="791" text-anchor="middle" font-size="14" font-weight="700" fill="#b4622d">띄어 씀</text>
+  <text x="900" y="808" text-anchor="middle" font-size="12" font-weight="700" fill="#b4622d">제42항</text>
+  <rect x="954" y="752" width="86" height="64" rx="10" fill="#ece5f3" stroke="#7a5aa6" stroke-width="1.5"/>
+  <text x="997" y="775" text-anchor="middle" font-size="12" fill="#6f675b">둘 다·모름</text>
+  <text x="997" y="797" text-anchor="middle" font-size="13" font-weight="700" fill="#7a5aa6">두 답 제시</text>
+  <!-- 아니오 -->
+  <path stroke="#8a8077" stroke-width="2" fill="none" d="M550 736 V758" marker-end="url(#arrow)"/>
+  <text x="562" y="752" font-size="13" font-weight="700" fill="#6f675b">아니오</text>
+
+  <!-- Q5 결합형 (y 758) -->
+  <rect x="400" y="758" width="300" height="56" rx="12" fill="#fffdf8" stroke="#c4baa8" stroke-width="1.5"/>
+  <text fill="#2b2722" x="550" y="783" text-anchor="middle" font-size="17" font-weight="700">붙은 결합형인가?</text>
+  <text x="550" y="803" text-anchor="middle" font-size="14" fill="#6f675b">예: 할만하다</text>
+  <!-- 예 → 왼쪽 레인으로 (x 80..360) -->
+  <path stroke="#8a8077" stroke-width="2" fill="none" d="M400 786 H360 H230 V836" marker-end="url(#arrow)"/>
+  <text x="300" y="778" font-size="13" font-weight="700" fill="#6f675b">예</text>
+  <rect x="90" y="836" width="280" height="44" rx="10" fill="#fffdf8" stroke="#c4baa8" stroke-width="1.5"/>
+  <text fill="#2b2722" x="230" y="863" text-anchor="middle" font-size="15" font-weight="700">앞이 진짜 용언인가?</text>
+  <!-- 맞음 ↓ -->
+  <path stroke="#8a8077" stroke-width="2" fill="none" d="M230 880 V902" marker-end="url(#arrow)"/>
+  <text x="242" y="896" font-size="13" font-weight="700" fill="#6f675b">맞음</text>
+  <rect x="90" y="902" width="280" height="62" rx="10" fill="#f6e6da" stroke="#b4622d" stroke-width="1.5"/>
+  <text fill="#2b2722" x="230" y="926" text-anchor="middle" font-size="14" font-weight="700">보조 용언 → <tspan fill="#b4622d">제47항</tspan></text>
+  <text fill="#2b2722" x="230" y="948" text-anchor="middle" font-size="14" font-weight="700">의존 명사 → <tspan fill="#b4622d">제42항</tspan></text>
+  <!-- 아님 → 메인 줄기(Q6)로 합류: 왼쪽질문 오른쪽 → 중앙축 진입점 y846 -->
+  <path stroke="#8a8077" stroke-width="2" fill="none" d="M370 858 H400" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+  <text x="376" y="850" font-size="12" font-weight="700" fill="#6f675b">아님</text>
+  <!-- 아니오 ↓ -->
+  <path stroke="#8a8077" stroke-width="2" fill="none" d="M550 814 V836" marker-end="url(#arrow)"/>
+  <text x="562" y="830" font-size="13" font-weight="700" fill="#6f675b">아니오</text>
+
+  <!-- Q6 호칭 (y 836) -->
+  <rect x="400" y="836" width="300" height="54" rx="12" fill="#fffdf8" stroke="#c4baa8" stroke-width="1.5"/>
+  <text fill="#2b2722" x="550" y="860" text-anchor="middle" font-size="17" font-weight="700">호칭·이름인가?</text>
+  <text x="550" y="879" text-anchor="middle" font-size="14" fill="#6f675b">성명 + 직함</text>
+  <path stroke="#8a8077" stroke-width="2" fill="none" d="M700 863 H760" marker-end="url(#arrow)"/>
+  <text x="722" y="855" font-size="13" font-weight="700" fill="#6f675b">예</text>
+  <rect x="760" y="836" width="280" height="54" rx="12" fill="#f6e6da" stroke="#b4622d" stroke-width="1.5"/>
+  <text x="778" y="860" font-size="13" font-weight="800" fill="#b4622d">제48항</text>
+  <text fill="#2b2722" x="852" y="867" font-size="16" font-weight="700">성명+호칭 띄움</text>
+  <path stroke="#8a8077" stroke-width="2" fill="none" d="M550 890 V912" marker-end="url(#arrow)"/>
+  <text x="562" y="906" font-size="13" font-weight="700" fill="#6f675b">아니오</text>
+
+  <!-- Q7 조사 (y 912) -->
+  <rect x="400" y="912" width="300" height="54" rx="12" fill="#fffdf8" stroke="#c4baa8" stroke-width="1.5"/>
+  <text fill="#2b2722" x="550" y="936" text-anchor="middle" font-size="17" font-weight="700">체언 + 조사인가?</text>
+  <text x="550" y="955" text-anchor="middle" font-size="14" fill="#6f675b">학교에서처럼</text>
+  <path stroke="#8a8077" stroke-width="2" fill="none" d="M700 939 H760" marker-end="url(#arrow)"/>
+  <text x="722" y="931" font-size="13" font-weight="700" fill="#6f675b">예</text>
+  <rect x="760" y="912" width="280" height="54" rx="12" fill="#e4ede5" stroke="#3f6b4f" stroke-width="1.5"/>
+  <text x="778" y="936" font-size="13" font-weight="800" fill="#3f6b4f">제41항</text>
+  <text x="852" y="943" font-size="16" font-weight="700" fill="#3f6b4f">붙여 씀</text>
+  <path stroke="#8a8077" stroke-width="2" fill="none" d="M550 966 V988" marker-end="url(#arrow)"/>
+  <text x="562" y="982" font-size="13" font-weight="700" fill="#6f675b">아니오</text>
+
+  <!-- Q8 관형사 (y 988) -->
+  <rect x="400" y="988" width="300" height="54" rx="12" fill="#fffdf8" stroke="#c4baa8" stroke-width="1.5"/>
+  <text fill="#2b2722" x="550" y="1012" text-anchor="middle" font-size="17" font-weight="700">관형사 + 명사인가?</text>
+  <text x="550" y="1031" text-anchor="middle" font-size="14" fill="#6f675b">예: 한 잎</text>
+  <path stroke="#8a8077" stroke-width="2" fill="none" d="M700 1015 H760" marker-end="url(#arrow)"/>
+  <text x="722" y="1007" font-size="13" font-weight="700" fill="#6f675b">예</text>
+  <rect x="760" y="988" width="280" height="54" rx="12" fill="#f6e6da" stroke="#b4622d" stroke-width="1.5"/>
+  <text x="852" y="1021" font-size="16" font-weight="700" fill="#b4622d">띄어 씀</text>
+  <path stroke="#8a8077" stroke-width="2" fill="none" d="M550 1042 V1064" marker-end="url(#arrow)"/>
+  <text x="562" y="1058" font-size="13" font-weight="700" fill="#6f675b">아니오</text>
+
+  <!-- STOP (y 1064) -->
+  <rect x="400" y="1064" width="300" height="52" rx="26" fill="#ffffff" stroke="#8a8378" stroke-width="2" stroke-dasharray="6 5"/>
+  <text x="550" y="1096" text-anchor="middle" font-size="17" font-weight="700" fill="#8a8378">"다시 검색해 보세요" 안내</text>
+
+  <!-- footnote -->
+  <line x1="60" y1="1160" x2="1040" y2="1160" stroke="#c4baa8" stroke-width="2" fill="none"/>
+  <text x="60" y="1192" font-size="15" fill="#6f675b">확신이 없으면 단정하지 않습니다 — 답이 갈리면 두 해석을 나란히, 어디에도 맞지 않으면 억지로 답하지 않고 안내로 넘어갑니다.</text>
+  <text x="60" y="1216" font-size="15" fill="#6f675b">결론만이 아니라 "어떤 순서로 찾았는지" 과정까지 함께 보여 줍니다.</text>
+</svg>
