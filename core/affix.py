@@ -21,12 +21,18 @@ from core.schema import InspectResult, RuleHint
 
 
 def _is_prefix(word: str, db_path: str | None) -> bool:
-    """우리말샘에 어두 접사(접두사)로 등재돼 있는지(word_raw가 '-'로 끝남)."""
+    """우리말샘에 어두 접사(접두사)로 등재돼 있는지.
+
+    어두 접사는 word_raw가 '-'로 끝나되 '-'로 시작하지는 않는다('본-', '맨-', '저-').
+    '-이-'(사동·피동 접요사)나 '-이'(명사 파생 접미사)처럼 '-'로 시작하는 형태는
+    어근 뒤에 붙는 접사라 어두 접두사가 아니므로 NOT LIKE '-%'로 배제한다.
+    (이 배제가 없으면 '이사람'이 접요사 '-이-' 때문에 접두사 결합으로 잘못 잡힌다.)
+    """
     joined, _ = normalize_lookup_forms(word)
     con = get_connection(db_path)
     row = con.execute(
         "SELECT 1 FROM entries WHERE word_joined = ? "
-        "AND pos = '접사' AND word_raw LIKE '%-' LIMIT 1",
+        "AND pos = '접사' AND word_raw LIKE '%-' AND word_raw NOT LIKE '-%' LIMIT 1",
         (joined,),
     ).fetchone()
     return row is not None

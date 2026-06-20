@@ -27,6 +27,25 @@ def test_adnominal_noun_more():
         assert "제2항" in _clauses(r), joined
 
 
+def test_demonstrative_determiner_spaces():
+    # 지시관형사 '이/그/저' + 자립 명사(사전 미등재)는 띄움(이 사람)으로 판정한다.
+    # '이'가 접요사 '-이-' 때문에 접두사 결합(이사람 붙임)으로 잘못 잡히던 회귀를 막는다.
+    for joined, spaced in [("이사람", "이 사람"), ("저사람", "저 사람")]:
+        r = inspect(joined)
+        assert r.spacing_options == [spaced], joined
+        assert "제2항" in _clauses(r), joined
+
+
+def test_demonstrative_compound_protected_by_dictionary():
+    # 굳어진 합성어·파생어('저혈압', '저비용')는 adnoun보다 먼저 사전 조회 단계에서 잡혀
+    # 붙임이 보호된다 → '저 혈압'으로 잘못 띄우지 않는다.
+    for q in ["저혈압", "저비용"]:
+        r = inspect(q)
+        assert r.found, q
+        assert any("등재됨" in p for p in r.inspection_path), q  # 사전 조회로 처리됨
+        assert f"{q[0]} {q[1:]}" not in r.spacing_options, q
+
+
 def test_particle_chain_longest_root():
     # 하나도: '도'만 떼면 '하나'(등재어) → '하+나+도'로 과분해하지 않는다.
     r = inspect("하나도")
