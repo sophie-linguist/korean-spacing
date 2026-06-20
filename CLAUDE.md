@@ -70,7 +70,10 @@ an `InspectResult` (see `core/schema.py`). The flow:
    matters and encodes precedence decisions (e.g. numerals before homographs so `만` in `12억3456만`
    isn't read as a dependent noun; particle chains before adnominal nouns so `너도`→`너+도`):
    `detect_numeral` → counter-phrase → counter-joined → `detect_homograph` → `_combined_result`
-   → `detect_honorific` → `detect_compound` → `detect_particle_chain` → `detect_adnominal_noun`.
+   → `detect_honorific` → `detect_compound` → `detect_particle_chain` → `detect_adnominal_noun`
+   → `detect_prefix`. `detect_prefix` is deliberately **last** (after `detect_adnominal_noun`) so the
+   curated 관형사 list keeps its 띄움 behavior; for a head that is both a 접두사 and a 관형사 (본·맨),
+   it shows *both* 붙임/띄움 readings rather than guessing.
 5. If nothing matches, return a silent "re-search" hint.
 
 Every decision point appends a human-readable Korean line to `result.inspection_path` (which detector was
@@ -107,9 +110,11 @@ units & 만-grouped large numbers — when a unit follows a man-grouped number i
 confirmation `원칙허용="확인"` instead of silence), `homograph.py` (제41 vs 42 — particle vs dependent noun,
 the `만큼·대로·데·지` split decided by the preceding word's POS), `compound.py` (제49·50항 — when a cover
 piece is itself a `^`-spaced headword it is expanded to that spacing, e.g. `정상나선은하`→`정상 나선 은하`),
-`particle.py` (제41항 chains), `adnoun.py` (제48항 adnominal + free noun), `connective.py` (제45항),
-`honorific.py` (제48항), `caret_rule.py` (제49·50항, using the `^` morpheme-boundary marker from 우리말샘
-headwords).
+`particle.py` (제41항 chains), `adnoun.py` (제48항 adnominal + free noun), `affix.py` (제2항 — 접두사 + 자립
+명사 joins, e.g. `본구축`→`본구축`; dictionary self-filtered: prefix must be a registered 접사 whose
+`word_raw` ends with `-`, rest must be a registered 자립명사; if the prefix is also a 관형사 it shows both
+붙임/띄움), `connective.py` (제45항), `honorific.py` (제48항), `caret_rule.py` (제49·50항, using the `^`
+morpheme-boundary marker from 우리말샘 headwords).
 
 ### Curated lists — closed by design
 

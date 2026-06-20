@@ -187,7 +187,11 @@ def detect_numeral(
         peeled = _peel_number(joined[: -len(unit)])
         if peeled is not None:
             prefix, num = peeled
-            if not strong_only or _number_is_strong(num):
+            strong = _number_is_strong(num)
+            # 수 앞에 다른 글자(prefix)가 남아 있으면, 약한 한 글자 한자수로 오인된
+            # 일반어('본구축'→본+구(9)+축)를 거른다. 강한 수(고유어거나 2글자+)만 인정.
+            # prefix가 비어 있으면(순수 '수+단위') 종전대로 strong_only 규칙만 따른다.
+            if strong or (not strong_only and not prefix):
                 return _unit_result(text, prefix, num, unit)
 
     if _is_sino_number(joined):

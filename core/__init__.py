@@ -3,6 +3,7 @@
 from typing import Any
 
 from core.adnoun import detect_adnominal_noun
+from core.affix import detect_prefix
 from core.caret_rule import caret_hint
 from core.compound import detect_compound
 from core.connective import detect_connective
@@ -264,6 +265,17 @@ def inspect(text: str, db_path: str | None = None) -> InspectResult:
             adnominal_case.segmentation = segmentation
             return _ret(adnominal_case)
         path.append("관형사 + 자립 명사 검사 → 해당 없음")
+
+        # 접두사 + 자립 명사(본구축 → 본+구축, 붙임). 접사는 자립어가 아니라 붙으므로
+        # 관형사+명사(띄움)와 다르다. adnominal(한·새·첫… 관형사 목록) '뒤'에 두어 그
+        # 목록의 종전 동작을 유지하고, 그 밖의 접두사(본·맨…)만 여기서 맡는다. 늦은
+        # fallback이라 앞선 detector(수·counter·합성어 등)가 단위 구조를 먼저 가져간다.
+        prefix_case = detect_prefix(normalized, db_path=db_path)
+        if prefix_case is not None:
+            path.append("접두사 + 자립 명사(접사 붙임, 제2항) 검사 → 적용")
+            prefix_case.segmentation = segmentation
+            return _ret(prefix_case)
+        path.append("접두사 + 자립 명사 검사 → 해당 없음")
 
         path.append("판정 근거 없음 → 다시 검색 안내")
         result.hint = "‘-다’로 끝나는 기본형(먹다·예쁘다)이나 ‘아는데·차한대’처럼 붙여 쓴 표현으로 검색해 보세요."
